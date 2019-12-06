@@ -1,0 +1,167 @@
+textarea {
+  margin: 0;
+  border-radius: 0;
+  font:20px courier;
+  min-height: 0%;
+  outline-width:0;
+  
+   /* min-width: 100%; 
+   /* max-height: 50vh; */
+
+   border-right: none;
+   border-left: 1px solid #FFF5;
+   border-top: none;
+   border-bottom: 1px solid #FFF5;
+
+   white-space: pre;  overflow: auto;
+}
+
+.CodeMirror {
+    border: 1px solid #eee;
+    height: auto;
+    font:20px courier;
+}
+
+.resizeable {
+    resize: both;
+}
+
+
+.textAreaColumn div span {
+    display:block;
+    font:20px courier;
+    color: red;
+}
+
+.text_area_block {
+    font-family:    courier;
+    font-size:      10px;
+    font-weight:    bold;
+}
+
+.status_info {
+    font-family: courier;
+    font-size:   20px;
+    font-weight: bold;
+    float: left;
+}
+
+.hidden {
+    display: none;
+}
+.shown {
+    display: block;
+    white-space: pre;
+}
+.fixed {
+    position: fixed;
+}
+
+
+:root {
+    --color-section-success:          white;
+    --color-section-error:            red;
+    --color-section-success-inactive: gray;
+    --color-section-error-inactive:   pink;
+    --color-section-transition-speed: 0.1s;
+}
+
+::-moz-selection { background: green; }
+::selection { background: green; }
+
+h1 {
+    user-select: none;
+}
+
+.shader_section_success {
+    transition: color var(--color-section-transition-speed) linear;
+    color: var(--color-section-success);
+}
+.shader_section_success:hover {
+    transition: color var(--color-section-transition-speed) linear;
+    color: var(--color-section-success-inactive);
+    cursor: pointer;
+}
+.shader_section_success_inactive {
+    transition: color var(--color-section-transition-speed) linear;
+    color: var(--color-section-success-inactive);
+}
+.shader_section_success_inactive:hover {
+    transition: color var(--color-section-transition-speed) linear;
+    color: var(--color-section-success);
+    cursor: pointer;
+}
+
+.shader_section_error {
+    transition: color var(--color-section-transition-speed) linear;
+    color: var(--color-section-error);
+}
+.shader_section_error:hover {
+    transition: color var(--color-section-transition-speed) linear;
+    color: var(--color-section-error-inactive);
+    cursor: pointer;
+}
+.shader_section_error_inactive {
+    transition: color var(--color-section-transition-speed) linear;
+    color: var(--color-section-error-inactive);
+}
+.shader_section_error_inactive:hover {
+    transition: color var(--color-section-transition-speed) linear;
+    color: var(--color-section-error);
+    cursor: pointer;
+}
+
+.vertical-menu {
+  height: 150px;
+  overflow-y: auto;
+  font: 10px courier;
+  position: absolute;
+  bottom: 37px;
+  filter: alpha(opacity=50);
+  z-index: var(--z-menu);
+  background-color: #ccca;
+
+  -webkit-user-select: none;  
+  -moz-user-select: none;    
+  -ms-user-select: none;      
+  user-select: none;
+}
+
+.user-view-selection {
+  font: 42px courier;
+  position: absolute;
+  bottom: 37px;
+  filter: alpha(opacity=50);
+  z-index: var(--z-menu);
+  background-color: #ccca;
+
+  position: absolute;
+  -webkit-user-select: none;  
+  -moz-user-select: none;    
+  -ms-user-select: none;      
+  user-select: none;
+}
+
+
+.vertical-menu div {
+  background-color: #ccca;
+  color: black;
+  display: block;
+  padding: 4px;
+  text-drecoration: none;
+  font:20px courier;
+  filter: alpha(opacity=50);
+}
+
+.vertical-menu div:hover {
+  color: white;
+  background-color: var(--ui-base-color);
+  filter: alpha(opacity=100);
+  cursor: pointer;
+}
+
+.vertical-menu div.active {
+  color: white;
+  filter: alpha(opacity=50);
+  background-color: var(--ui-base-color);
+}

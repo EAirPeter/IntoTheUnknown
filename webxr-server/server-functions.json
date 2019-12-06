@@ -1,0 +1,20 @@
+{
+    "incoming": [
+        "restart",
+        "object",
+        "avatar",
+        "world",
+        "lock",
+        "release",
+        "activate",
+        "deactivate",
+        "spawn",
+        "delete"
+    ],
+    "outgoing": [
+        "initialize",
+        "tick",
+        "join",
+        "leave"
+    ]
+}

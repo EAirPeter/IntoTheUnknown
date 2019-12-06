@@ -1,0 +1,16 @@
+{
+   "name": "webxr-server",
+   "version": "0.0.1",
+   "scripts": {
+      "start": "nodemon server.js"
+   },
+   "devDependencies": {
+      "forever": "^1.0.0",
+      "nodemon": "^1.19.4"
+   },
+   "dependencies": {
+      "argparse": "^1.0.10",
+      "three": "^0.110.0",
+      "ws": "^6.2.1"
+   }
+}

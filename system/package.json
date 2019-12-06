@@ -1,0 +1,21 @@
+{
+  "name": "metaroom",
+  "version": "0.1.0",
+  "description": "Framework for interactive graphics experiences",
+  "scripts": {
+    "start": "run-os",
+    "start:win32": "start \"\" http://localhost:3000/ && node server/main.js"
+  },
+  "dependencies": {
+    "argparse": "^1.0.10",
+    "chokidar": "3.0.2",
+    "codemirror": "5.48.4",
+    "express": "4.16.4",
+    "file-saver": "^2.0.2",
+    "axios": "^0.19.0",
+    "ws": "^6.2.1"
+  },
+  "devDependencies": {
+    "run-script-os": "1.0.5"
+  }
+}

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+git submodule init
+git submodule update --recursive
+cd system/server
+npm install
+cd ../..
+cd webxr-server
+npm install
+cd ..
+npm install -g pm2
