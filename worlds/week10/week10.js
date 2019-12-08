@@ -650,6 +650,14 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.restore();
    }
 
+   let drawPlanet = (location, size, textureId) => {
+      m.save();
+         m.translate(location[0], location[1], location[2]);
+         m.scale(size[0], size[1], size[2]);
+         drawShape(CG.sphere, [1,1,1], textureId);
+      m.restore();
+   }
+
     /*-----------------------------------------------------------------
 
     The below is just my particular "programmer art" for the size and
@@ -813,6 +821,10 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
    m.save();
       m.translate((TABLE_DEPTH - HALL_WIDTH) / 2, 0, 0);
       drawTable(1);
+   m.restore();
+
+   m.save();
+      drawPlanet([1, 1, 0], [0.3, 0.3, 0.3], 2);
    m.restore();
 
    // DRAW TEST SHAPE
