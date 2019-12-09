@@ -650,10 +650,10 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.restore();
    }
 
-   let drawPlanet = (location, size, textureId) => {
+   let drawPlanet = (location, R, textureId) => {
       m.save();
          m.translate(location[0], location[1], location[2]);
-         m.scale(size[0], size[1], size[2]);
+         m.scale(R, R, R);
          drawShape(CG.sphere, [1,1,1], textureId);
       m.restore();
    }
@@ -806,26 +806,46 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
     -----------------------------------------------------------------*/
 
-   m.save();
-      let dy = isMiniature ? 0 : HALL_WIDTH/2;
-      m.translate(0, dy, 0);
-      m.scale(-HALL_WIDTH/2, -dy, -HALL_LENGTH/2);
-      drawShape(CG.cube, [1,1,1], 1,4, 2,4);
-   m.restore();
+   // m.save();
+   //    let dy = isMiniature ? 0 : HALL_WIDTH/2;
+   //    m.translate(0, dy, 0);
+   //    m.scale(-HALL_WIDTH/2, -dy, -HALL_LENGTH/2);
+   //    drawShape(CG.cube, [1,1,1], 1,4, 2,4);
+   // m.restore();
 
-   m.save();
-      m.translate((HALL_WIDTH - TABLE_DEPTH) / 2, 0, 0);
-      drawTable(0);
-   m.restore();
+   // m.save();
+   //    m.translate((HALL_WIDTH - TABLE_DEPTH) / 2, 0, 0);
+   //    drawTable(0);
+   // m.restore();
 
-   m.save();
-      m.translate((TABLE_DEPTH - HALL_WIDTH) / 2, 0, 0);
-      drawTable(1);
-   m.restore();
+   // m.save();
+   //    m.translate((TABLE_DEPTH - HALL_WIDTH) / 2, 0, 0);
+   //    drawTable(1);
+   // m.restore();
 
-   m.save();
-      drawPlanet([1, 1, 0], [0.3, 0.3, 0.3], 2);
-   m.restore();
+   let create_scene = () => { 
+      for (let i = -400; i < 400; i += 100) {
+         for (let j = -400; j < 400; j += 100) {
+            for (let k = -400; k < 400; k += 100) {
+               if (i*i + j*j + k*k < 200*200 ) {
+                  m.save();
+                  drawPlanet([i, j, k], 25, Math.abs(i) % 9);
+                  m.restore();
+               }
+            }
+         }
+      }
+   }
+   // miniature
+   let miniature = () => {
+      m.save();
+      m.scale(0.005, 0.005, 0.005);
+      create_scene();
+      m.restore();
+   }
+
+   create_scene();
+   miniature();
 
    // DRAW TEST SHAPE
 
