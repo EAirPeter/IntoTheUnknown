@@ -15,19 +15,28 @@ in vec2 vUV;           // U,V
 vec3 Ldir[2];
 vec3 Lrgb[2];
 
+const int n_tex = 5;
+
 uniform int uTexIndex;
 uniform float uTexScale;
 
-uniform sampler2D uTex0;
-uniform sampler2D uTex1;
-uniform sampler2D uTex2;
+// uniform sampler2D uTex0;
+// uniform sampler2D uTex1;
+// uniform sampler2D uTex2;
+
+uniform sampler2D uTex[5];
 
 out vec4 fragColor;    // RESULT WILL GO HERE
 
 void main() {
-    vec4 texture0 = texture(uTex0, vUV * uTexScale);
-    vec4 texture1 = texture(uTex1, vUV * uTexScale);
-    vec4 texture2 = texture(uTex2, vUV * uTexScale);
+    // vec4 texture0 = texture(uTex0, vUV * uTexScale);
+    // vec4 texture1 = texture(uTex1, vUV * uTexScale);
+    // vec4 texture2 = texture(uTex2, vUV * uTexScale);
+
+    vec4 texture[n_tex];
+    for (int i = 0; i < n_tex; i++) {
+        texture[i] = texture(uTex[i], vUV * uTexScale);
+    }
 
     vec3 ambient = .1 * uColor.rgb;
     vec3 diffuse = .5 * uColor.rgb;
@@ -54,9 +63,12 @@ void main() {
     }
 
     fragColor = vec4(sqrt(color.rgb), uColor.a);
-    if (uTexIndex == 0) fragColor *= texture0;
-    if (uTexIndex == 1) fragColor *= texture1;
-    if (uTexIndex == 2) fragColor *= texture2;
+    // if (uTexIndex == 0) fragColor *= texture0;
+    // if (uTexIndex == 1) fragColor *= texture1;
+    // if (uTexIndex == 2) fragColor *= texture2;
+    for(int i =0; i < 5; i++) {
+         if (uTexIndex == i) fragColor *= texture(uTex[i], vUV * uTexScale);
+     }
 }
 
 

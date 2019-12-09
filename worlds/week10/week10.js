@@ -157,7 +157,9 @@ async function setup(state) {
    const images = await imgutil.loadImagesPromise([
       getPath("textures/wood.png"),
       getPath("textures/tiles.jpg"),
-      getPath("textures/noisy_bump.jpg")
+      getPath("textures/noisy_bump.jpg"),
+      getPath("textures/stones.jpg"),
+      getPath("textures/brick.png"),
    ]);
 
    let libSources = await MREditor.loadAndRegisterShaderLibrariesForLiveEditing(gl, "libs", [
@@ -209,11 +211,17 @@ async function setup(state) {
                state.uTimeLoc     = gl.getUniformLocation(program, 'uTime');
                state.uToonLoc     = gl.getUniformLocation(program, 'uToon');
                state.uViewLoc     = gl.getUniformLocation(program, 'uView');
-                     state.uTexLoc = [];
-                     for (let n = 0 ; n < 8 ; n++) {
-                        state.uTexLoc[n] = gl.getUniformLocation(program, 'uTex' + n);
-                        gl.uniform1i(state.uTexLoc[n], n);
-                     }
+               // state.uTexLoc = [];
+               // for (let n = 0 ; n < 8 ; n++) {
+               //    state.uTexLoc[n] = gl.getUniformLocation(program, 'uTex' + n);
+               //    gl.uniform1i(state.uTexLoc[n], n);
+               // }
+
+               state.uTexLoc = [];
+               for (let n = 0 ; n < 8 ; n++) {
+                  state.uTexLoc[n] = gl.getUniformLocation(program, 'uTex[' + n + ']');
+                  gl.uniform1i(state.uTexLoc[n], n);
+               }
          } 
       },
       {
@@ -847,7 +855,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
             drawPlanet(loc, 50, 500, 10, 2);
          m.restore();
          m.save();
-            drawPlanet(loc, 80, 700, 30, 6, 20);
+            drawPlanet(loc, 80, 700, 30, 4, 20);
          m.restore();
       m.restore();
 
@@ -855,13 +863,13 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
          loc = [-1000, 0, 2000];
          m.rotateZ(45);
          m.save();
-            drawStar(loc, 300, 5);
+            drawStar(loc, 300, 3);
          m.restore();
          m.save();
-            drawPlanet(loc, 100, 800, 10, 6);
+            drawPlanet(loc, 100, 800, 10, 2);
          m.restore();
          m.save();
-            drawPlanet(loc, 80, 1000, 15, 6, 30);
+            drawPlanet(loc, 80, 1000, 15, 4, 30);
          m.restore();
       m.restore();
 
@@ -872,10 +880,10 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
             drawStar(loc, 300, 5);
          m.restore();
          m.save();
-            drawPlanet(loc, 100, 800, 10, 6);
+            drawPlanet(loc, 100, 800, 10, 3);
          m.restore();
          m.save();
-            drawPlanet(loc, 80, 1000, 15, 6, 30);
+            drawPlanet(loc, 80, 1000, 15, 3, 30);
          m.restore();
       m.restore();
 
@@ -883,13 +891,13 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
          loc = [-2000, -500, 1000];
          m.rotateZ(45);
          m.save();
-            drawStar(loc, 300, 5);
+            drawStar(loc, 300, 1);
          m.restore();
          m.save();
-            drawPlanet(loc, 100, 800, 10, 6);
+            drawPlanet(loc, 100, 800, 10, 2);
          m.restore();
          m.save();
-            drawPlanet(loc, 80, 1000, 15, 6, 30);
+            drawPlanet(loc, 80, 1000, 15, 3, 30);
          m.restore();
       m.restore();
    }
