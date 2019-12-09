@@ -658,9 +658,9 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.restore();
    }
 
-   let drawPlanet= (location, R, r, T, textureId) => {
+   let drawPlanet= (location, R, r, T, textureId, phi=0) => {
       m.save();
-         m.translate(location[0] + r*Math.cos(Math.PI*2 / T *state.time), location[1], location[2]+r*Math.sin(Math.PI*2 / T * state.time));
+         m.translate(location[0] + r*Math.cos(Math.PI*2 / T *state.time+phi), location[1], location[2]+r*Math.sin(Math.PI*2 / T * state.time+phi));
          m.scale(R, R, R);
          drawShape(CG.sphere, [1,1,1], textureId);
       m.restore();
@@ -846,6 +846,9 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
          m.save();
             drawPlanet(loc, 50, 500, 10, 2);
          m.restore();
+         m.save();
+            drawPlanet(loc, 80, 700, 30, 6, 20);
+         m.restore();
       m.restore();
 
       m.save();
@@ -857,17 +860,48 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
          m.save();
             drawPlanet(loc, 100, 800, 10, 6);
          m.restore();
+         m.save();
+            drawPlanet(loc, 80, 1000, 15, 6, 30);
+         m.restore();
+      m.restore();
+
+      m.save();
+         loc = [1000, 500, 2000];
+         m.rotateZ(45);
+         m.save();
+            drawStar(loc, 300, 5);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 100, 800, 10, 6);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 80, 1000, 15, 6, 30);
+         m.restore();
+      m.restore();
+
+      m.save();
+         loc = [-2000, -500, 1000];
+         m.rotateZ(45);
+         m.save();
+            drawStar(loc, 300, 5);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 100, 800, 10, 6);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 80, 1000, 15, 6, 30);
+         m.restore();
       m.restore();
    }
    // miniature
    let miniature = () => {
       m.save();
-      m.scale(0.01, 0.01, 0.01);
+      m.scale(0.001, 0.001, 0.001);
       create_scene();
       m.restore();
    }
 
-   // create_scene();
+   create_scene();
    miniature();
 
    // DRAW TEST SHAPE: Arm
