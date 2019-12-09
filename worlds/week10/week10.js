@@ -211,15 +211,11 @@ async function setup(state) {
                state.uTimeLoc     = gl.getUniformLocation(program, 'uTime');
                state.uToonLoc     = gl.getUniformLocation(program, 'uToon');
                state.uViewLoc     = gl.getUniformLocation(program, 'uView');
-               // state.uTexLoc = [];
-               // for (let n = 0 ; n < 8 ; n++) {
-               //    state.uTexLoc[n] = gl.getUniformLocation(program, 'uTex' + n);
-               //    gl.uniform1i(state.uTexLoc[n], n);
-               // }
 
                state.uTexLoc = [];
                for (let n = 0 ; n < 8 ; n++) {
-                  state.uTexLoc[n] = gl.getUniformLocation(program, 'uTex[' + n + ']');
+                  state.uTexLoc[n] = gl.getUniformLocation(program, 'uTex' + n );
+                  // state.uTexLoc[n] = gl.getUniformLocation(program, 'uTex[' + n +']');
                   gl.uniform1i(state.uTexLoc[n], n);
                }
          } 

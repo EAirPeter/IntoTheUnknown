@@ -1,4 +1,4 @@
-#version 300 es        // NEWER VERSION OF GLSL
+#version 300 es
 precision highp float; // HIGH PRECISION FLOATS
 
 uniform vec4  uColor;
@@ -22,15 +22,12 @@ uniform float uToon;
 uniform int uTexIndex;
 uniform float uTexScale;
 
-// uniform sampler2D uTex0;
-// uniform sampler2D uTex1;
-// uniform sampler2D uTex2;
-const int n_tex = 5;
+uniform sampler2D uTex0;
+uniform sampler2D uTex1;
+uniform sampler2D uTex2;
+// const int n_tex = 5;
 
-uniform sampler2D uTex[n_tex];
-
-
-
+uniform sampler2D uTex[5];
 
 out vec4 fragColor;    // RESULT WILL GO HERE
 
@@ -65,13 +62,13 @@ vec3 phong(vec3 Ldir, vec3 Lrgb, vec3 normal, vec3 diffuse, vec3 specular, float
 }
 
 void main() {
-   //  vec4 texture0 = texture(uTex[0], vUV * uTexScale);
-   //  vec4 texture1 = texture(uTex[1], vUV * uTexScale);
-   //  vec4 texture2 = texture(uTex[2], vUV * uTexScale);
-   vec4 texture_[n_tex];
-    for(int i =0; i < n_tex; i++) {
-       texture_[i] = texture(uTex[i], vUV * uTexScale);
-    }
+    vec4 texture0 = texture(uTex0, vUV * uTexScale);
+    vec4 texture1 = texture(uTex1, vUV * uTexScale);
+    vec4 texture2 = texture(uTex2, vUV * uTexScale);
+   // vec4 texture_[n_tex];
+   //  for(int i =0; i < n_tex; i++) {
+   //     texture_[i] = texture(uTex[i], vUV * uTexScale);
+   //  }
 
     vec3 ambient = .1 * uColor.rgb;
     vec3 diffuse = .5 * uColor.rgb;
@@ -85,13 +82,13 @@ void main() {
 
     vec3 normal = normalize(vNor);
 
-   //  if (uBumpIndex == 0) normal = bumpTexture(normal, texture(uTex[0], vUV * uBumpScale));
-   //  if (uBumpIndex == 1) normal = bumpTexture(normal, texture(uTex[1], vUV * uBumpScale));
-   //  if (uBumpIndex == 2) normal = bumpTexture(normal, texture(uTex[2], vUV * uBumpScale));
+    if (uBumpIndex == 0) normal = bumpTexture(normal, texture(uTex0, vUV * uBumpScale));
+    if (uBumpIndex == 1) normal = bumpTexture(normal, texture(uTex1, vUV * uBumpScale));
+    if (uBumpIndex == 2) normal = bumpTexture(normal, texture(uTex2, vUV * uBumpScale));
     
-    for(int i =0; i < n_tex; i++) {
-       if (uBumpIndex == i) normal = bumpTexture(normal, texture(uTex[i], vUV * uBumpScale));
-    }
+   //  for(int i =0; i < 3; i++) {
+   //     if (uBumpIndex == i) normal = bumpTexture(normal, texture(uTex[i], vUV * uBumpScale));
+   //  }
 
     vec3 color = ambient;
     color += phong(Ldir[0], Lrgb[0], normal, diffuse, specular, p);
@@ -100,13 +97,13 @@ void main() {
     //color *= .5 + .5 * noize(10. * vPos);
 
     fragColor = vec4(sqrt(color.rgb) * (uToon == 0. ? 1. : 0.), uColor.a);
-   //  if (uTexIndex == 0) fragColor *= texture(uTex[0], vUV * uTexScale);
-   //  if (uTexIndex == 1) fragColor *= texture(uTex[1], vUV * uTexScale);
-   //  if (uTexIndex == 2) fragColor *= texture(uTex[2], vUV * uTexScale);
+    if (uTexIndex == 0) fragColor *= texture(uTex0, vUV * uTexScale);
+    if (uTexIndex == 1) fragColor *= texture(uTex1, vUV * uTexScale);
+    if (uTexIndex == 2) fragColor *= texture(uTex2, vUV * uTexScale);
 
-     for(int i =0; i < n_tex; i++) {
-         if (uTexIndex == i) fragColor *= texture(uTex[i], vUV * uTexScale);
-     }
+   // for(int i =0; i < 5; i++) {
+   //    if (uTexIndex == i) fragColor *= texture(uTex[i], vUV * uTexScale);
+   // }
 }
 
 
