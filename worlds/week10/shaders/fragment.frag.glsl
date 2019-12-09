@@ -25,8 +25,11 @@ uniform float uTexScale;
 // uniform sampler2D uTex0;
 // uniform sampler2D uTex1;
 // uniform sampler2D uTex2;
+const int n_tex = 5;
 
-uniform sampler2D uTex[5];
+uniform sampler2D uTex[n_tex];
+
+
 
 
 out vec4 fragColor;    // RESULT WILL GO HERE
@@ -65,8 +68,8 @@ void main() {
    //  vec4 texture0 = texture(uTex[0], vUV * uTexScale);
    //  vec4 texture1 = texture(uTex[1], vUV * uTexScale);
    //  vec4 texture2 = texture(uTex[2], vUV * uTexScale);
-   vec4 texture_[5];
-    for(int i =0; i < 5; i++) {
+   vec4 texture_[n_tex];
+    for(int i =0; i < n_tex; i++) {
        texture_[i] = texture(uTex[i], vUV * uTexScale);
     }
 
@@ -86,7 +89,7 @@ void main() {
    //  if (uBumpIndex == 1) normal = bumpTexture(normal, texture(uTex[1], vUV * uBumpScale));
    //  if (uBumpIndex == 2) normal = bumpTexture(normal, texture(uTex[2], vUV * uBumpScale));
     
-    for(int i =0; i < 5; i++) {
+    for(int i =0; i < n_tex; i++) {
        if (uBumpIndex == i) normal = bumpTexture(normal, texture(uTex[i], vUV * uBumpScale));
     }
 
@@ -101,7 +104,7 @@ void main() {
    //  if (uTexIndex == 1) fragColor *= texture(uTex[1], vUV * uTexScale);
    //  if (uTexIndex == 2) fragColor *= texture(uTex[2], vUV * uTexScale);
 
-     for(int i =0; i < 5; i++) {
+     for(int i =0; i < n_tex; i++) {
          if (uTexIndex == i) fragColor *= texture(uTex[i], vUV * uTexScale);
      }
 }
