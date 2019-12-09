@@ -839,23 +839,30 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
    let create_scene = () => { 
       m.save();
-      m.translate(0, 0, 0);
-         let loc = [-100, 100, 0];
+         let loc = [-1000, 1000, 0];
          m.save();
-            drawStar([-100, 100, 0], 25, 0);
+            drawStar(loc, 250, 1);
          m.restore();
          m.save();
-            drawPlanet(loc, 5, 50, 10, 2);
+            drawPlanet(loc, 50, 500, 10, 2);
          m.restore();
-         // m.save();
-         //    drawPlanet([0, 100, 0], 25, 1);
-         // m.restore();
+      m.restore();
+
+      m.save();
+         loc = [-1000, 0, 2000];
+         m.rotateZ(45);
+         m.save();
+            drawStar(loc, 300, 5);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 100, 800, 10, 6);
+         m.restore();
       m.restore();
    }
    // miniature
    let miniature = () => {
       m.save();
-      m.scale(0.005, 0.005, 0.005);
+      m.scale(0.01, 0.01, 0.01);
       create_scene();
       m.restore();
    }
@@ -863,57 +870,57 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
    // create_scene();
    miniature();
 
-   // DRAW TEST SHAPE
+   // DRAW TEST SHAPE: Arm
 
-   m.save();
-      m.translate(0, 2 * TABLE_HEIGHT, (TABLE_DEPTH - HALL_WIDTH) / 2);
-      //m.aimZ([Math.cos(state.time),Math.sin(state.time),0]);
-      m.rotateY(state.time);
-      m.scale(.06,.06,.6);
-      //drawShape(lathe, [1,.2,0]);
-      m.restore();
+   // m.save();
+   //    m.translate(0, 2 * TABLE_HEIGHT, (TABLE_DEPTH - HALL_WIDTH) / 2);
+   //    //m.aimZ([Math.cos(state.time),Math.sin(state.time),0]);
+   //    m.rotateY(state.time);
+   //    m.scale(.06,.06,.6);
+   //    //drawShape(lathe, [1,.2,0]);
+   //    m.restore();
 
-      let A = [0,0,0];
-      let B = [1+.4*Math.sin(2 * state.time),.4*Math.cos(2 * state.time),0];
-      let C = CG.ik(.7,.7,B,[0,-1,-2]);
+   //    let A = [0,0,0];
+   //    let B = [1+.4*Math.sin(2 * state.time),.4*Math.cos(2 * state.time),0];
+   //    let C = CG.ik(.7,.7,B,[0,-1,-2]);
 
-      m.save();
-      m.translate(-.5, 2.5 * TABLE_HEIGHT, (TABLE_DEPTH - HALL_WIDTH) / 2);
-      //m.rotateY(state.time);
-      /*
-      m.save();
-         m.translate(A[0],A[1],A[2]).scale(.07);
-         drawShape(CG.sphere, [1,1,1]);
-      m.restore();
+   //    m.save();
+   //    m.translate(-.5, 2.5 * TABLE_HEIGHT, (TABLE_DEPTH - HALL_WIDTH) / 2);
+   //    //m.rotateY(state.time);
+   //    /*
+   //    m.save();
+   //       m.translate(A[0],A[1],A[2]).scale(.07);
+   //       drawShape(CG.sphere, [1,1,1]);
+   //    m.restore();
 
-      m.save();
-         m.translate(B[0],B[1],B[2]).scale(.07);
-         drawShape(CG.sphere, [1,1,1]);
-      m.restore();
+   //    m.save();
+   //       m.translate(B[0],B[1],B[2]).scale(.07);
+   //       drawShape(CG.sphere, [1,1,1]);
+   //    m.restore();
 
-      m.save();
-         m.translate(C[0],C[1],C[2]).scale(.07);
-         drawShape(CG.sphere, [1,1,1]);
-      m.restore();
-      */
-      state.isToon = true;
-      let skinColor = [1,.5,.3], D;
-      m.save();
-         D = CG.mix(A,C,.5);
-         m.translate(D[0],D[1],D[2]);
-         m.aimZ(CG.subtract(A,C));
-         m.scale(.05,.05,.37);
-         drawShape(lathe, skinColor, -1,1, 2,1);
-      m.restore();
+   //    m.save();
+   //       m.translate(C[0],C[1],C[2]).scale(.07);
+   //       drawShape(CG.sphere, [1,1,1]);
+   //    m.restore();
+   //    */
+   //    state.isToon = true;
+   //    let skinColor = [1,.5,.3], D;
+   //    m.save();
+   //       D = CG.mix(A,C,.5);
+   //       m.translate(D[0],D[1],D[2]);
+   //       m.aimZ(CG.subtract(A,C));
+   //       m.scale(.05,.05,.37);
+   //       drawShape(lathe, skinColor, -1,1, 2,1);
+   //    m.restore();
 
-      m.save();
-         D = CG.mix(C,B,.5);
-         m.translate(D[0],D[1],D[2]).aimZ(CG.subtract(C,B)).scale(.03,.03,.37);
-         drawShape(lathe, skinColor, -1,1, 2,1);
-      m.restore();
-      state.isToon = false;
+   //    m.save();
+   //       D = CG.mix(C,B,.5);
+   //       m.translate(D[0],D[1],D[2]).aimZ(CG.subtract(C,B)).scale(.03,.03,.37);
+   //       drawShape(lathe, skinColor, -1,1, 2,1);
+   //    m.restore();
+   //    state.isToon = false;
 
-   m.restore();
+   // m.restore();
       /*-----------------------------------------------------------------
         Here is where we draw avatars and controllers.
       -----------------------------------------------------------------*/
