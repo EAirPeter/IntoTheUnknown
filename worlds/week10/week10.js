@@ -155,6 +155,9 @@ async function setup(state) {
 
    // I propose adding a dictionary mapping texture strings to locations, so that drawShapes becomes clearer
    const images = await imgutil.loadImagesPromise([
+      getPath("textures/solar.jpg"),
+      getPath("textures/earth.jpg"),
+      getPath("textures/1.jpg"),
       getPath("textures/wood.png"),
       getPath("textures/tiles.jpg"),
       getPath("textures/noisy_bump.jpg"),
@@ -845,13 +848,13 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.save();
          let loc = [-1000, 1000, 0];
          m.save();
-            drawStar(loc, 250, 1);
+            drawStar(loc, 250, 0);
          m.restore();
          m.save();
             drawPlanet(loc, 50, 500, 10, 2);
          m.restore();
          m.save();
-            drawPlanet(loc, 80, 700, 30, 4, 20);
+            drawPlanet(loc, 80, 700, 30, 1, 20);
          m.restore();
       m.restore();
 
@@ -859,13 +862,13 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
          loc = [-1000, 0, 2000];
          m.rotateZ(45);
          m.save();
-            drawStar(loc, 300, 3);
+            drawStar(loc, 300, 1);
          m.restore();
          m.save();
             drawPlanet(loc, 100, 800, 10, 2);
          m.restore();
          m.save();
-            drawPlanet(loc, 80, 1000, 15, 4, 30);
+            drawPlanet(loc, 80, 1000, 15, 0, 30);
          m.restore();
       m.restore();
 
@@ -873,13 +876,13 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
          loc = [1000, 500, 2000];
          m.rotateZ(45);
          m.save();
-            drawStar(loc, 300, 5);
+            drawStar(loc, 300, 2);
          m.restore();
          m.save();
-            drawPlanet(loc, 100, 800, 10, 3);
+            drawPlanet(loc, 100, 800, 10, 1);
          m.restore();
          m.save();
-            drawPlanet(loc, 80, 1000, 15, 3, 30);
+            drawPlanet(loc, 80, 1000, 15, 0, 30);
          m.restore();
       m.restore();
 
