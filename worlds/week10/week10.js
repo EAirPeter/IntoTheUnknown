@@ -650,9 +650,17 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.restore();
    }
 
-   let drawPlanet = (location, R, textureId) => {
+   let drawStar= (location, R, textureId) => {
       m.save();
          m.translate(location[0], location[1], location[2]);
+         m.scale(R, R, R);
+         drawShape(CG.sphere, [1,1,1], textureId);
+      m.restore();
+   }
+
+   let drawPlanet= (location, R, r, T, textureId) => {
+      m.save();
+         m.translate(location[0] + r*Math.cos(Math.PI*2 / T *state.time), location[1], location[2]+r*Math.sin(Math.PI*2 / T * state.time));
          m.scale(R, R, R);
          drawShape(CG.sphere, [1,1,1], textureId);
       m.restore();
@@ -807,6 +815,12 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     -----------------------------------------------------------------*/
 
    // m.save();
+   //    m.scale(1, 1, 1);
+   //    m.translate(-1, -1, -1);
+   //    drawShape(CG.inward_sphere, [1,1,1]);
+   // m.restore();
+
+   // m.save();
    //    let dy = isMiniature ? 0 : HALL_WIDTH/2;
    //    m.translate(0, dy, 0);
    //    m.scale(-HALL_WIDTH/2, -dy, -HALL_LENGTH/2);
@@ -824,17 +838,19 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
    // m.restore();
 
    let create_scene = () => { 
-      for (let i = -400; i < 400; i += 100) {
-         for (let j = -400; j < 400; j += 100) {
-            for (let k = -400; k < 400; k += 100) {
-               if (i*i + j*j + k*k < 200*200 ) {
-                  m.save();
-                  drawPlanet([i, j, k], 25, Math.abs(i) % 9);
-                  m.restore();
-               }
-            }
-         }
-      }
+      m.save();
+      m.translate(0, 0, 0);
+         let loc = [-100, 100, 0];
+         m.save();
+            drawStar([-100, 100, 0], 25, 0);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 5, 50, 10, 2);
+         m.restore();
+         // m.save();
+         //    drawPlanet([0, 100, 0], 25, 1);
+         // m.restore();
+      m.restore();
    }
    // miniature
    let miniature = () => {
@@ -844,7 +860,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.restore();
    }
 
-   create_scene();
+   // create_scene();
    miniature();
 
    // DRAW TEST SHAPE
