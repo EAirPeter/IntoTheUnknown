@@ -104,6 +104,12 @@ void main() {
    // for(int i =0; i < 5; i++) {
    //    if (uTexIndex == i) fragColor *= texture(uTex[i], vUV * uTexScale);
    // }
+   // if (fragColor.xyz == vec3(0.)) {
+   //    float light = abs(noise(vPos));
+   //    if (light > 0.) {
+   //       fragColor.xyz = vec3(1.);
+   //    }
+   // }
 }
 
 

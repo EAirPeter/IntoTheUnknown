@@ -903,7 +903,8 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
    // miniature
    let miniature = () => {
       m.save();
-      m.scale(0.001, 0.001, 0.001);
+      m.translate(0, EYE_HEIGHT*0.8, 0);
+      m.scale(0.0001, 0.0001, 0.0001);
       create_scene();
       m.restore();
    }
