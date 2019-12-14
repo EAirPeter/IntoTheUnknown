@@ -85,7 +85,7 @@ function ControllerHandler(controller) {
   this.tip      = () => {
     let P = this.position();        // THIS CODE JUST MOVES
     m.identity();                   // THE "HOT SPOT" OF THE
-    m.translate(P);                 // CONTROLLER TOWARD ITS
+    m.translate(P[0],P[1],P[2]);    // CONTROLLER TOWARD ITS
     m.rotateQ(this.orientation());  // FAR TIP (FURTHER AWAY
     m.translate(0,0,-.03);          // FROM THE USER'S HAND).
     let v = m.value();
@@ -94,7 +94,7 @@ function ControllerHandler(controller) {
   this.center = () => {
     let P = this.position();
     m.identity();
-    m.translate(P);
+    m.translate(P[0],P[1],P[2]);
     m.rotateQ(this.orientation());
     m.translate(0,.02,-.005);
     let v = m.value();
@@ -182,8 +182,7 @@ async function setup(state) {
     }
   }
 
-  console.log("fetching...", getPath("f16.json"));
-  const f16 = await axios.get(getPath("f16.json"));
+  const f16 = await axios.get("objs/spaceship01.json");
   CG.f16 = new CG.Model(f16.data);
 
   const images = await imgutil.loadImagesPromise(paths);
@@ -629,10 +628,10 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     shape.draw();
   }
 
-  m.translate(0, 0, -10);
-  m.rotateX(state.time)
-  m.scale(4);
-  drawShape(CG.f16, [1, 1, 1], state.mats.f16);
+  m.translate(0, 0, 1000);
+  m.rotateY(state.time)
+  m.scale(.4);
+  drawShape(CG.f16, [1, 1, 1]);
   return;
 
    /*-----------------------------------------------------------------
