@@ -21,7 +21,7 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 
 let loc = [0, 0, 0];
 let dir = [0, 0, 1];
-let speed = 1;
+let speed = 0.1;
 
 let texs = {
   white:    {img: "white.png"},
@@ -792,14 +792,19 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
    };
 
    let hold = false;
-   if (input.LC) {
-      hold = input.LC.press();
+   if (input.LC && input.LC.press()) {
+      if (speed < 0.5) {
+         speed += 0.01;
+      }
    }
+
+   if(input.RC && input.RC.press()) {
+      dir = CG.add(dir, [0.1, 0, 0]);
+   }
+
    m.save();
-   if(hold) {
-      loc = CG.add(loc, CG.scale(dir, speed));
-   }
-   m.translate(start_loc[0], start_loc[1], start_loc[2]);
+   loc = CG.add(loc, CG.scale(dir, speed));
+   m.translate(loc[0], loc[1], loc[2]);
 
    create_scene();
    miniature();
