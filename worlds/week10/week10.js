@@ -20,25 +20,39 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 ////////////////////////////// SCENE SPECIFIC CODE
 
 let texs = {
-  white:    {img: "white.png"},
-  normal:   {img: "normal.png"},
-  wood:     {img: "wood.png"},
+  white:        {img: "white.png"},
+  normal:       {img: "normal.png"},
+  wood:         {img: "wood.png"},
   // tiles:    {img: "tiles"},
-  earth:    {img: "earth.jpg"},
-  one:      {img: "1.jpg"},
-  nb:       {img: "noisy_bump.jpg"},
-  stones:   {img: "stones.jpg"},
-  brick:    {img: "brick.png"},
-  solar:    {img: "solar.jpg"}
+  nb:           {img: "noisy_bump.jpg"},
+  stones:       {img: "stones.jpg"},
+  brick:        {img: "brick.png"},
+  sun:          {img: "0sun.jpg"},
+  mercury:      {img: "1mercury.jpg"},
+  venus:        {img: "2venus.jpg"},
+  earth:        {img: "3earth.jpg"},
+  mars:         {img: "4mars.jpg"},
+  jupiter:      {img: "5jupiter.jpg"},
+  saturn:       {img: "6saturn.jpg"},
+  saturn_ring:  {img: "6saturn_ring.png"},
+  uranus:       {img: "7uranus.jpg"},
+  neptune:      {img: "8neptune.jpg"},
 };
 
 let getMats = () => { return {
-  trivial:  [texs.white.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
-  solar:    [texs.solar.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
-  wood:     [texs.wood .id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  trivial:    [texs.white.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  wood:       [texs.wood .id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   // tiles:    [texs.tiles.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
-  earth:    [texs.earth.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
-  one:      [texs.one  .id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  sun:        [texs.sun.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  mercury:    [texs.mercury.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  venus:      [texs.venus.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  earth:      [texs.earth.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  mars:       [texs.mars.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  jupiter:    [texs.jupiter.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  saturn:     [texs.saturn.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  saturn_ring:[texs.saturn_ring.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  uranus:     [texs.uranus.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  neptune:    [texs.neptune.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
 }};
 
 let noise = new ImprovedNoise();
@@ -549,30 +563,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
    /*-----------------------------------------------------------------
 
-   drawTable() just happens to model the physical size and shape of the
-   tables in my lab (measured in meters). If you want to model physical
-   furniture, you will probably want to do something different.
-
-   -----------------------------------------------------------------*/
-
-  let drawStar = (location, R, mat) => {
-    m.save();
-      m.translate(location[0], location[1], location[2]);
-      m.scale(R, R, R);
-      drawShape(CG.sphere, [1,1,1], mat);
-    m.restore();
-  };
-
-  let drawPlanet = (location, R, r, T, mat, phi = 0) => {
-    m.save();
-      m.translate(location[0] + r * Math.cos(Math.PI * 2 / T * state.time + phi), location[1], location[2] + r * Math.sin(Math.PI * 2 / T * state.time + phi));
-      m.scale(R, R, R);
-      drawShape(CG.sphere, [1, 1, 1], mat);
-    m.restore();
-  };
-
-   /*-----------------------------------------------------------------
-
    The below is just my particular "programmer art" for the size and
    shape of a controller. Feel free to create a different appearance
    for the controller. You might also want the controller appearance,
@@ -715,68 +705,82 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
    -----------------------------------------------------------------*/
 
+  let drawStar = (location, star, mat) => {
+    m.save();
+    m.translate(location[0], location[1], location[2]);
+    m.scale(star.radius, star.radius, star.radius);
+    drawShape(CG.sphere, [1,1,1], mat);
+    m.restore();
+  };
+
+  let drawPlanet = (location, planet, T, mat, phi = 0) => {
+    m.save();
+    m.translate(location[0] + planet.distance * Math.cos(Math.PI * 2 / T * state.time + phi),
+        location[1], location[2] + planet.distance * Math.sin(Math.PI * 2 / T * state.time + phi));
+    m.scale(planet.radius, planet.radius, planet.radius);
+    drawShape(CG.sphere, [1, 1, 1], mat);
+    m.restore();
+  };
+
+  let planetRadiusScale = 3, planetDistanceScale = 0.4;
+  let solarSystemData = {
+    sun: {radius: 10},
+    mercury: {radius: 0.648 * planetRadiusScale, distance: 61.36 * planetDistanceScale},
+    venus: {radius: 0.8 * planetRadiusScale, distance: 77.29 * planetDistanceScale},
+    earth: {radius: 0.9 * planetRadiusScale, distance: 106.86 * planetDistanceScale},
+    mars: {radius: 0.68 * planetRadiusScale, distance: 132.86 * planetDistanceScale},
+    jupiter: {radius: 2.5 * planetRadiusScale, distance: 175.93 * planetDistanceScale},
+    saturn: {radius: 2.1 * planetRadiusScale, distance: 230 * planetDistanceScale},
+    uranus: {radius: 1.35 * planetRadiusScale, distance: 265 * planetDistanceScale},
+    neptune: {radius: 1.34 * planetRadiusScale, distance: 317 * planetDistanceScale},
+  };
+
   let create_scene = () => {
     // draw stars and planets
     m.save();
-      let loc = [-200, 200, -600];
+      let loc = [0, 0, -200];
       m.save();
-        drawStar(loc, 150, state.mats.solar);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 50, 200, 10, state.mats.one);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 20, 200, 30, state.mats.one, 20);
-      m.restore();
-    m.restore();
-
-    m.save();
-      loc = [-500, -200, -600];
-      // m.rotateZ(45);
-      m.save();
-        drawStar(loc, 150, state.mats.earth);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 50, 300, 10, state.mats.one);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 40, 250, 15, state.mats.solar, 30);
-      m.restore();
-    m.restore();
-
-    m.save();
-      loc = [400, 250, -400];
-      // m.rotateZ(45);
-      m.save();
-        drawStar(loc, 150, state.mats.one);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 50, 200, 10, state.mats.earth);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 40, 300, 15, state.mats.solar, 30);
-      m.restore();
-    m.restore();
-
-    m.save();
-      loc = [400, -250, -500];
-      // m.rotateZ(45);
-      m.save();
-        drawStar(loc, 150);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 40, 200, 10, state.mats.one);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 30, 250, 15, state.mats.wood, 30);
-      m.restore();
+        drawStar(loc, solarSystemData.sun, state.mats.sun);
+        m.save();
+          m.rotateZ(-0.2);
+          drawPlanet(loc, solarSystemData.mercury, 10, state.mats.mercury);
+        m.restore();
+        m.save();
+          m.rotateZ(-0.1);
+          drawPlanet(loc, solarSystemData.venus, 12, state.mats.venus, 20);
+        m.restore();
+        m.save();
+          m.rotateZ(0);
+          drawPlanet(loc, solarSystemData.earth, 15, state.mats.earth, 30);
+        m.restore();
+        m.save();
+          m.rotateZ(-0.05);
+          drawPlanet(loc, solarSystemData.mars, 18, state.mats.mars, 40);
+        m.restore();
+        m.save();
+          m.rotateZ(0);
+          drawPlanet(loc, solarSystemData.jupiter, 23, state.mats.jupiter, 50);
+        m.restore();
+        m.save();
+          m.rotateZ(0.1);
+          drawPlanet(loc, solarSystemData.saturn, 27, state.mats.saturn, 60);
+        m.restore();
+        m.save();
+          m.rotateZ(0.05);
+          drawPlanet(loc, solarSystemData.uranus, 31, state.mats.uranus, 70);
+        m.restore();
+        m.save();
+          m.rotateZ(0);
+          drawPlanet(loc, solarSystemData.neptune, 37, state.mats.neptune, 80);
+        m.restore();
     m.restore();
   };
   // miniature of background
   let miniature = () => {
     m.save();
+      let miniatureScale = 0.001;
       m.translate(0, EYE_HEIGHT * 0.8, 0);
-      m.scale(0.0002, 0.0002, 0.0002);
+      m.scale(miniatureScale, miniatureScale, miniatureScale);
       create_scene();
     m.restore();
   };
