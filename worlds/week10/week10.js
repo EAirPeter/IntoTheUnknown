@@ -549,13 +549,6 @@ function onDraw(t, projMat, viewMat, state, eyeIdx) {
    m.save();
       myDraw(t, projMat, viewMat, state, eyeIdx, false);
    m.restore();
-
-   m.save();
-      m.translate(HALL_WIDTH/2 - TABLE_DEPTH/2, -TABLE_HEIGHT*1.048, TABLE_WIDTH/6.7);
-      m.rotateY(Math.PI);
-      m.scale(.1392);
-      myDraw(t, projMat, viewMat, state, eyeIdx, true);
-   m.restore();
 }
 
 function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
@@ -663,7 +656,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
          m.scale(R, R, R);
          drawShape(CG.sphere, [1,1,1], textureId);
       m.restore();
-   }
+   };
 
    let drawPlanet= (location, R, r, T, textureId, phi=0) => {
       m.save();
@@ -671,7 +664,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
          m.scale(R, R, R);
          drawShape(CG.sphere, [1,1,1], textureId);
       m.restore();
-   }
+   };
 
     /*-----------------------------------------------------------------
 
@@ -846,68 +839,68 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
    let create_scene = () => { 
       m.save();
-         let loc = [-1000, 1000, 0];
+         let loc = [-200, 200, -600];
          m.save();
-            drawStar(loc, 250, 0);
+            drawStar(loc, 150, 0);
          m.restore();
          m.save();
-            drawPlanet(loc, 50, 500, 10, 2);
+            drawPlanet(loc, 50, 200, 10, 2);
          m.restore();
          m.save();
-            drawPlanet(loc, 80, 700, 30, 1, 20);
-         m.restore();
-      m.restore();
-
-      m.save();
-         loc = [-1000, 0, 2000];
-         m.rotateZ(45);
-         m.save();
-            drawStar(loc, 300, 1);
-         m.restore();
-         m.save();
-            drawPlanet(loc, 100, 800, 10, 2);
-         m.restore();
-         m.save();
-            drawPlanet(loc, 80, 1000, 15, 0, 30);
+            drawPlanet(loc, 20, 200, 30, 1, 20);
          m.restore();
       m.restore();
 
       m.save();
-         loc = [1000, 500, 2000];
-         m.rotateZ(45);
+         loc = [-500, -200, -600];
+         // m.rotateZ(45);
          m.save();
-            drawStar(loc, 300, 2);
+            drawStar(loc, 150, 1);
          m.restore();
          m.save();
-            drawPlanet(loc, 100, 800, 10, 1);
+            drawPlanet(loc, 50, 300, 10, 2);
          m.restore();
          m.save();
-            drawPlanet(loc, 80, 1000, 15, 0, 30);
+            drawPlanet(loc, 40, 250, 15, 0, 30);
          m.restore();
       m.restore();
 
       m.save();
-         loc = [-2000, -500, 1000];
-         m.rotateZ(45);
+         loc = [400, 250, -400];
+         // m.rotateZ(45);
          m.save();
-            drawStar(loc, 300, 1);
+            drawStar(loc, 150, 2);
          m.restore();
          m.save();
-            drawPlanet(loc, 100, 800, 10, 2);
+            drawPlanet(loc, 50, 200, 10, 1);
          m.restore();
          m.save();
-            drawPlanet(loc, 80, 1000, 15, 3, 30);
+            drawPlanet(loc, 40, 300, 15, 0, 30);
          m.restore();
       m.restore();
-   }
+
+      m.save();
+         loc = [400, -250, -500];
+         // m.rotateZ(45);
+         m.save();
+            drawStar(loc, 150);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 40, 200, 10, 2);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 30, 250, 15, 3, 30);
+         m.restore();
+      m.restore();
+   };
    // miniature
    let miniature = () => {
       m.save();
       m.translate(0, EYE_HEIGHT*0.8, 0);
-      m.scale(0.0001, 0.0001, 0.0001);
+      m.scale(0.0002, 0.0002, 0.0002);
       create_scene();
       m.restore();
-   }
+   };
 
    create_scene();
    miniature();
