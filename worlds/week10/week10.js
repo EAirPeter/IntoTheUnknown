@@ -19,9 +19,14 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 
 ////////////////////////////// SCENE SPECIFIC CODE
 
-let loc = [0, 0, 0];
+let ship_loc = [0, 0, 0];
 let dir = [0, 0, 1];
-let speed = 0.1;
+let speed = 1;
+
+let last_time = 0;
+
+let out_side = 0; // -1 means left; 1 means right; 0 means inside.
+let arm_loc = [out_side*3, 0, 0];
 
 let texs = {
   white:    {img: "white.png"},
@@ -798,17 +803,35 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       }
    }
 
+   // console.log(state.time);
+
    if(input.RC && input.RC.press()) {
       dir = CG.add(dir, [0.1, 0, 0]);
    }
 
-   m.save();
-   loc = CG.add(loc, CG.scale(dir, speed));
-   m.translate(loc[0], loc[1], loc[2]);
+   let dt = state.time - last_time;
+   console.log(dt);
 
-   create_scene();
-   miniature();
-   m.restore();
+   if(out_side == 0) {
+      m.save();
+      ship_loc = CG.add(ship_loc, CG.scale(dir, speed*dt));
+      m.translate(-ship_loc[0], -ship_loc[1], -ship_loc[2]);
+      
+      create_scene();
+      miniature();
+      m.restore();
+   }
+   else {
+      m.save();
+      arm_loc = CG.add(ship_loc, arm_loc);
+      m.translate(-arm_loc[0], -arm_loc[1], -arm_loc[2]);
+      create_scene();
+      m.restore();
+   }
+
+   last_time = state.time;
+
+
    /*-----------------------------------------------------------------
       Here is where we draw avatars and controllers.
    -----------------------------------------------------------------*/
