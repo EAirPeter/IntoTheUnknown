@@ -19,6 +19,10 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 
 ////////////////////////////// SCENE SPECIFIC CODE
 
+let loc = [0, 0, 0];
+let dir = [0, 0, 1];
+let speed = 1;
+
 let texs = {
   white:    {img: "white.png"},
   normal:   {img: "normal.png"},
@@ -497,9 +501,9 @@ function onDraw(t, projMat, viewMat, state, eyeIdx) {
   let P = state.position;
   m.translate(P[0],P[1],P[2]);
 
-  m.save();
+//   m.save();
     myDraw(t, projMat, viewMat, state, eyeIdx, false);
-  m.restore();
+//   m.restore();
 }
 
 function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
@@ -508,6 +512,8 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   gl.uniformMatrix4fv(state.uProjLoc, false, new Float32Array(projMat));
 
   const input  = state.input;
+  let LC = input.LC;
+  let RC = input.RC;
 
    /*-----------------------------------------------------------------
 
@@ -773,17 +779,31 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
   // miniature of background
-  let miniature = () => {
-    m.save();
-      m.translate(0, EYE_HEIGHT * 0.8, 0);
-      m.scale(0.0002, 0.0002, 0.0002);
-      create_scene();
-    m.restore();
-  };
+   let miniature = () => {
+      m.save();
+      let loc = [0, EYE_HEIGHT * 0.8, 0.5];
+      if(input.LC) {
+         loc = input.LC.tip().slice();
+      }
+         m.translate(loc[0], loc[1], loc[2]);
+         m.scale(0.0002, 0.0002, 0.0002);
+         create_scene();
+      m.restore();
+   };
 
-  create_scene();
-  miniature();
+   let hold = false;
+   if (input.LC) {
+      hold = input.LC.press();
+   }
+   m.save();
+   if(hold) {
+      loc = CG.add(loc, CG.scale(dir, speed));
+   }
+   m.translate(start_loc[0], start_loc[1], start_loc[2]);
 
+   create_scene();
+   miniature();
+   m.restore();
    /*-----------------------------------------------------------------
       Here is where we draw avatars and controllers.
    -----------------------------------------------------------------*/
