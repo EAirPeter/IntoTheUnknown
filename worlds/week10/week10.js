@@ -44,10 +44,12 @@ let texs = {
   nb:       {img: "noisy_bump.jpg"},
   stones:   {img: "stones.jpg"},
   brick:    {img: "brick.png"},
+  solar:    {img: "solar.jpg"}
 };
 
 let getMats = () => { return {
   trivial:  [texs.white.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  solar:    [texs.solar.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   wood:     [texs.wood .id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   tiles:    [texs.tiles.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   earth:    [texs.earth.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
@@ -186,9 +188,6 @@ async function setup(state) {
       mapped.push(tex);
     }
   }
-
-  const f16 = await axios.get("objs/spaceship01.json");
-  CG.f16 = new CG.Model(f16.data);
 
   const images = await imgutil.loadImagesPromise(paths);
 
@@ -624,13 +623,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       gl.uniform1f(state.uToonLoc, 0);
     }
     shape.draw();
-  }
-
-  m.translate(0, 0, 1000);
-  m.rotateY(state.time)
-  m.scale(.4);
-  drawShape(CG.f16, [1, 1, 1]);
-  return;
+  };
 
    /*-----------------------------------------------------------------
 
@@ -682,19 +675,19 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
-  let drawStar= (location, R, textureId) => {
+  let drawStar= (location, R, mat) => {
     m.save();
       m.translate(location[0], location[1], location[2]);
       m.scale(R, R, R);
-      drawShape(CG.sphere, [1,1,1], textureId);
+      drawShape(CG.sphere, [1,1,1], mat);
     m.restore();
   };
 
-  let drawPlanet = (location, R, r, T, textureId, phi = 0) => {
+  let drawPlanet = (location, R, r, T, mat, phi = 0) => {
     m.save();
       m.translate(location[0] + r * Math.cos(Math.PI * 2 / T * state.time + phi), location[1], location[2] + r * Math.sin(Math.PI * 2 / T * state.time + phi));
       m.scale(R, R, R);
-      drawShape(CG.sphere, [1, 1, 1], textureId);
+      drawShape(CG.sphere, [1, 1, 1], mat);
     m.restore();
   };
 
@@ -872,13 +865,13 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.save();
          let loc = [-200, 200, -600];
          m.save();
-            drawStar(loc, 150, 0);
+            drawStar(loc, 150, state.mats.solar);
          m.restore();
          m.save();
-            drawPlanet(loc, 50, 200, 10, 2);
+            drawPlanet(loc, 50, 200, 10, state.mats.one);
          m.restore();
          m.save();
-            drawPlanet(loc, 20, 200, 30, 1, 20);
+            drawPlanet(loc, 20, 200, 30, state.mats.one, 20);
          m.restore();
       m.restore();
 
@@ -886,13 +879,13 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
          loc = [-500, -200, -600];
          // m.rotateZ(45);
          m.save();
-            drawStar(loc, 150, 1);
+            drawStar(loc, 150, state.mats.earth);
          m.restore();
          m.save();
-            drawPlanet(loc, 50, 300, 10, 2);
+            drawPlanet(loc, 50, 300, 10, state.mats.one);
          m.restore();
          m.save();
-            drawPlanet(loc, 40, 250, 15, 0, 30);
+            drawPlanet(loc, 40, 250, 15, state.mats.solar, 30);
       m.restore();
     m.restore();
 
@@ -900,13 +893,13 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
          loc = [400, 250, -400];
          // m.rotateZ(45);
          m.save();
-            drawStar(loc, 150, 2);
+            drawStar(loc, 150, state.mats.one);
          m.restore();
          m.save();
-            drawPlanet(loc, 50, 200, 10, 1);
+            drawPlanet(loc, 50, 200, 10, state.mats.earth);
          m.restore();
          m.save();
-            drawPlanet(loc, 40, 300, 15, 0, 30);
+            drawPlanet(loc, 40, 300, 15, state.mats.solar, 30);
          m.restore();
       m.restore();
 
@@ -917,10 +910,10 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
             drawStar(loc, 150);
          m.restore();
          m.save();
-            drawPlanet(loc, 40, 200, 10, 2);
+            drawPlanet(loc, 40, 200, 10, state.mats.one);
          m.restore();
          m.save();
-            drawPlanet(loc, 30, 250, 15, 3, 30);
+            drawPlanet(loc, 30, 250, 15, state.mats.wood, 30);
          m.restore();
       m.restore();
    };
