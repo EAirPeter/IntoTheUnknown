@@ -28,12 +28,13 @@ uniform float uTime; // time in seconds
 uniform float uToon; // control toon shading
 
 void main(void) {
-    vec4 pos = uProj * uView * uModel * vec4(aPos, 1.);
-    vXY = pos.xy / pos.z;
-    vPos = aPos;
-    vNor = (vec4(aNor, 0.) * inverse(uModel)).xyz;
-    vTan = (vec4(aTan, 0.) * inverse(uModel)).xyz;
-    vBin = cross(vNor, vTan);
-    vUV = aUV * vec2(1.,-1.) + vec2(0.,1.);
-    gl_Position = pos + uToon * vec4(normalize(vNor).xy, 0.,0.);
+  vec4 pos = uProj * uView * uModel * vec4(aPos, 1.);
+  vXY = pos.xy / pos.z;
+  mat3 m = transpose(inverse(mat3(uModel)));
+  vPos = (uModel * vec4(aPos, 1.)).xyz;
+  vNor = m * aNor;
+  vTan = m * aTan;
+  vBin = cross(vNor, vTan);
+  vUV = aUV * vec2(1.,-1.) + vec2(0.,1.);
+  gl_Position = pos + uToon * vec4(normalize(vNor).xy, 0.,0.);
 }
