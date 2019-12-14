@@ -14,24 +14,9 @@ const inchesToMeters = inches => inches * 0.0254;
 const metersToInches = meters => meters / 0.0254;
 
 const EYE_HEIGHT     = inchesToMeters( 69);
-const HALL_LENGTH    = inchesToMeters(306);
-const HALL_WIDTH     = inchesToMeters(215);
 const RING_RADIUS    = 0.0425;
 const TABLE_DEPTH    = inchesToMeters( 30);
-const TABLE_HEIGHT    = inchesToMeters( 29);
-const TABLE_WIDTH    = inchesToMeters( 60);
-const TABLE_THICKNESS  = inchesToMeters( 11/8);
-const LEG_THICKNESS   = inchesToMeters(  2.5);
 
-let enableModeler = true;
-
-/*Example Grabble Object*/
-let grabbableCube = new Obj(CG.torus);
-
-let lathe = new CG.Mesh(10, 16, CG.uvToLathe,
-          [CG.bezierToCubic([-1.0,-1.0,-0.7,-0.3,-0.1 , 0.1, 0.3 , 0.7 , 1.0 ,1.0]),
-           CG.bezierToCubic([ 0.0, 0.5, 0.8, 1.1, 1.25, 1.4, 1.45, 1.55, 1.7 ,0.0])]);
-// let lathe = CG.cube;
 ////////////////////////////// SCENE SPECIFIC CODE
 
 let texs = {
@@ -97,7 +82,7 @@ function ControllerHandler(controller) {
     m.translate(0,0,-.03);          // FROM THE USER'S HAND).
     let v = m.value();
     return [v[12],v[13],v[14]];
-  }
+  };
   this.center = () => {
     let P = this.position();
     m.identity();
@@ -106,7 +91,7 @@ function ControllerHandler(controller) {
     m.translate(0,.02,-.005);
     let v = m.value();
     return [v[12],v[13],v[14]];
-  }
+  };
   let wasDown = false;
 }
 
@@ -169,7 +154,7 @@ async function setup(state) {
     cursorPrev : [0,0,0],
     LC : null,
     RC : null
-  }
+  };
 
   let mapped = [];
   let paths = [];
@@ -302,16 +287,6 @@ async function setup(state) {
   }
   state.mats = getMats();
 
-  // (New Info): editor state in a sub-object that can be cached
-  // for convenience
-  // e.g. const editor = state.editor;
-  // state.editor = {
-  //    menuShape : [gfx.cube, gfx.sphere, gfx.cylinder, gfx.torus],
-  //    objs : [],
-  //    menuChoice : -1,
-  //    enableModeler : false
-  // };
-
   state.calibrationCount = 0;
 
   Input.initKeyEvents();
@@ -335,12 +310,12 @@ async function setup(state) {
 
   ************************************************************************/
 
-  MR.objs.push(grabbableCube);
-  grabbableCube.position   = [0,0,-0.5].slice();
-  grabbableCube.orientation = [1,0,0,1].slice();
-  grabbableCube.uid = 0;
-  grabbableCube.lock = new Lock();
-  sendSpawnMessage(grabbableCube);
+  // MR.objs.push(grabbableCube);
+  // grabbableCube.position   = [0,0,-0.5].slice();
+  // grabbableCube.orientation = [1,0,0,1].slice();
+  // grabbableCube.uid = 0;
+  // grabbableCube.lock = new Lock();
+  // sendSpawnMessage(grabbableCube);
 }
 
 /************************************************************************
@@ -380,7 +355,6 @@ function onStartFrame(t, state) {
   -----------------------------------------------------------------*/
 
   const input  = state.input;
-  const editor = state.editor;
 
   if (!state.avatarMatrixForward) {
     // MR.avatarMatrixForward is because i need accesss to this in callback.js, temp hack
@@ -410,7 +384,7 @@ function onStartFrame(t, state) {
   let cursorValue = () => {
     let p = state.cursor.position(), canvas = MR.getCanvas();
     return [ p[0] / canvas.clientWidth * 2 - 1, 1 - p[1] / canvas.clientHeight * 2, p[2] ];
-  }
+  };
 
   let cursorXYZ = cursorValue();
   if (state.cursorPrev === undefined)
@@ -436,7 +410,7 @@ function onStartFrame(t, state) {
     state.position[2] -= fz;
   }
 
-// SET UNIFORMS AND GRAPHICAL STATE BEFORE DRAWING.
+  // SET UNIFORMS AND GRAPHICAL STATE BEFORE DRAWING.
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -457,28 +431,6 @@ function onStartFrame(t, state) {
   objects. There are lots of possibilities.
 
   -----------------------------------------------------------------*/
-  if (enableModeler && input.LC) {
-    if (input.RC.isDown()) {
-      menuChoice = findInMenu(input.RC.position(), input.LC.tip());
-      if (menuChoice >= 0 && input.LC.press()) {
-        state.isNewObj = true;
-        let newObject = new Obj(menuShape[menuChoice]);
-        /*Should you want to support grabbing, refer to the
-          above example in setup()*/
-        MR.objs.push(newObject);
-        sendSpawnMessage(newObject);
-      }
-    }
-    if (state.isNewObj) {
-      let obj = MR.objs[MR.objs.length - 1];
-      obj.position   = input.LC.tip().slice();
-      obj.orientation = input.LC.orientation().slice();
-      //Create lock object for each new obj.
-      obj.lock = new Lock();
-    }
-    if (input.LC.release())
-      state.isNewObj = false;
-  }
 
   if (input.LC) {
     let LP = input.LC.center();
@@ -493,14 +445,14 @@ function onStartFrame(t, state) {
         let x = (m.value())[1];
       m.restore();
       return x;
-    }
+    };
     let lx = getX(input.LC);
     let rx = getX(input.RC);
     let sep = metersToInches(TABLE_DEPTH - 2 * RING_RADIUS);
     if (d >= sep - 1 && d <= sep + 1 && Math.abs(lx) < .03 && Math.abs(rx) < .03) {
       if (state.calibrationCount === undefined)
         state.calibrationCount = 0;
-      if (++state.calibrationCount == 30) {
+      if (++state.calibrationCount === 30) {
         m.save();
           m.identity();
           m.translate(CG.mix(LP, RP, .5));
@@ -533,39 +485,9 @@ function onStartFrame(t, state) {
    pollGrab(state);
 }
 
-let menuX = [-.2,-.1,-.2,-.1];
-let menuY = [ .1, .1,  0,  0];
-let menuShape = [ CG.cube, CG.sphere, CG.cylinder, CG.torus ];
-let menuChoice = -1;
-
-/*-----------------------------------------------------------------
-
-If the controller tip is near to a menu item, return the index
-of that item. If the controller tip is not near to any menu
-item, return -1.
-
-mp == position of the menu origin (position of the right controller).
-p  == the position of the left controller tip.
-
------------------------------------------------------------------*/
-
-let findInMenu = (mp, p) => {
-  let x = p[0] - mp[0];
-  let y = p[1] - mp[1];
-  let z = p[2] - mp[2];
-  for (let n = 0 ; n < 4 ; n++) {
-    let dx = x - menuX[n];
-    let dy = y - menuY[n];
-    let dz = z;
-    if (dx * dx + dy * dy + dz * dz < .03 * .03)
-      return n;
-  }
-  return -1;
-}
-
 function Obj(shape) {
   this.shape = shape;
-};
+}
 
 
 function onDraw(t, projMat, viewMat, state, eyeIdx) {
@@ -627,34 +549,13 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
    /*-----------------------------------------------------------------
 
-   In my little toy geometric modeler, the pop-up menu of objects only
-   appears while the right controller trigger is pressed. This is just
-   an example. Feel free to change things, depending on what you are
-   trying to do in your homework.
-
-   -----------------------------------------------------------------*/
-
-  let showMenu = p => {
-    let x = p[0], y = p[1], z = p[2];
-    for (let n = 0 ; n < 4 ; n++) {
-      m.save();
-        m.multiply(state.avatarMatrixForward);
-        m.translate(x + menuX[n], y + menuY[n], z);
-        m.scale(.03, .03, .03);
-        drawShape(menuShape[n], n == menuChoice ? [1,.5,.5] : [1,1,1]);
-      m.restore();
-    }
-  }
-
-   /*-----------------------------------------------------------------
-
    drawTable() just happens to model the physical size and shape of the
    tables in my lab (measured in meters). If you want to model physical
    furniture, you will probably want to do something different.
 
    -----------------------------------------------------------------*/
 
-  let drawStar= (location, R, mat) => {
+  let drawStar = (location, R, mat) => {
     m.save();
       m.translate(location[0], location[1], location[2]);
       m.scale(R, R, R);
@@ -685,7 +586,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
    -----------------------------------------------------------------*/
 
   let drawHeadset = (position, orientation) => {
-    //  let P = HS.position();'
     let P = position;
 
     m.save();
@@ -780,8 +680,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
     drawController(input.LC, 0);
     drawController(input.RC, 1);
-    if (enableModeler && input.RC.isDown())
-      showMenu(input.RC.position());
     m.restore();
   }
 
@@ -817,92 +715,91 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
    -----------------------------------------------------------------*/
 
-   let create_scene = () => {
-
-     // draw stars and planets
+  let create_scene = () => {
+    // draw stars and planets
+    m.save();
+      let loc = [-200, 200, -600];
       m.save();
-         let loc = [-200, 200, -600];
-         m.save();
-            drawStar(loc, 150, state.mats.solar);
-         m.restore();
-         m.save();
-            drawPlanet(loc, 50, 200, 10, state.mats.one);
-         m.restore();
-         m.save();
-            drawPlanet(loc, 20, 200, 30, state.mats.one, 20);
-         m.restore();
+        drawStar(loc, 150, state.mats.solar);
       m.restore();
-
       m.save();
-         loc = [-500, -200, -600];
-         // m.rotateZ(45);
-         m.save();
-            drawStar(loc, 150, state.mats.earth);
-         m.restore();
-         m.save();
-            drawPlanet(loc, 50, 300, 10, state.mats.one);
-         m.restore();
-         m.save();
-            drawPlanet(loc, 40, 250, 15, state.mats.solar, 30);
+        drawPlanet(loc, 50, 200, 10, state.mats.one);
+      m.restore();
+      m.save();
+        drawPlanet(loc, 20, 200, 30, state.mats.one, 20);
       m.restore();
     m.restore();
 
+    m.save();
+      loc = [-500, -200, -600];
+      // m.rotateZ(45);
       m.save();
-         loc = [400, 250, -400];
-         // m.rotateZ(45);
-         m.save();
-            drawStar(loc, 150, state.mats.one);
-         m.restore();
-         m.save();
-            drawPlanet(loc, 50, 200, 10, state.mats.earth);
-         m.restore();
-         m.save();
-            drawPlanet(loc, 40, 300, 15, state.mats.solar, 30);
-         m.restore();
+        drawStar(loc, 150, state.mats.earth);
       m.restore();
+      m.save();
+        drawPlanet(loc, 50, 300, 10, state.mats.one);
+      m.restore();
+      m.save();
+        drawPlanet(loc, 40, 250, 15, state.mats.solar, 30);
+      m.restore();
+    m.restore();
 
+    m.save();
+      loc = [400, 250, -400];
+      // m.rotateZ(45);
       m.save();
-         loc = [400, -250, -500];
-         // m.rotateZ(45);
-         m.save();
-            drawStar(loc, 150);
-         m.restore();
-         m.save();
-            drawPlanet(loc, 40, 200, 10, state.mats.one);
-         m.restore();
-         m.save();
-            drawPlanet(loc, 30, 250, 15, state.mats.wood, 30);
-         m.restore();
+        drawStar(loc, 150, state.mats.one);
       m.restore();
-   };
-   // miniature of background
-   let miniature = () => {
       m.save();
-      m.translate(0, EYE_HEIGHT*0.8, 0);
+        drawPlanet(loc, 50, 200, 10, state.mats.earth);
+      m.restore();
+      m.save();
+        drawPlanet(loc, 40, 300, 15, state.mats.solar, 30);
+      m.restore();
+    m.restore();
+
+    m.save();
+      loc = [400, -250, -500];
+      // m.rotateZ(45);
+      m.save();
+        drawStar(loc, 150);
+      m.restore();
+      m.save();
+        drawPlanet(loc, 40, 200, 10, state.mats.one);
+      m.restore();
+      m.save();
+        drawPlanet(loc, 30, 250, 15, state.mats.wood, 30);
+      m.restore();
+    m.restore();
+  };
+  // miniature of background
+  let miniature = () => {
+    m.save();
+      m.translate(0, EYE_HEIGHT * 0.8, 0);
       m.scale(0.0002, 0.0002, 0.0002);
       create_scene();
-      m.restore();
-   };
+    m.restore();
+  };
 
-   create_scene();
-   miniature();
+  create_scene();
+  miniature();
 
    /*-----------------------------------------------------------------
       Here is where we draw avatars and controllers.
    -----------------------------------------------------------------*/
-   
-   for (let id in MR.avatars) {
-      
-      const avatar = MR.avatars[id];
 
-    if (avatar.mode == MR.UserType.vr) {
-      if (MR.playerid == avatar.playerid)
+  for (let id in MR.avatars) {
+
+    const avatar = MR.avatars[id];
+
+    if (avatar.mode === MR.UserType.vr) {
+      if (MR.playerid === avatar.playerid)
         continue;
 
       let headsetPos = avatar.headset.position;
       let headsetRot = avatar.headset.orientation;
 
-      if(headsetPos == null || headsetRot == null)
+      if (headsetPos == null || headsetRot == null)
         continue;
 
       if (typeof headsetPos == 'undefined') {
@@ -922,8 +819,8 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       let rpos = rcontroller.position.slice();
       rpos[1] += EYE_HEIGHT;
 
-      drawSyncController(rpos, rcontroller.orientation, [1,0,0]);
-      drawSyncController(lpos, lcontroller.orientation, [0,1,1]);
+      drawSyncController(rpos, rcontroller.orientation, [1, 0, 0]);
+      drawSyncController(lpos, lcontroller.orientation, [0, 1, 1]);
     }
   }
 }
