@@ -39,14 +39,12 @@ let texs = {
   normal:   {img: "normal.png"},
   wood:     {img: "wood.png"},
   tiles:    {dir: "tiles"},
-  f16:      {img: "f16.bmp"},
 };
 
 let getMats = () => { return {
   trivial:  [texs.white.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   wood:     [texs.wood .id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   tiles:    texs.tiles.id,
-  f16:     [texs.f16  .id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
 }};
 
 let noise = new ImprovedNoise();
@@ -182,8 +180,8 @@ async function setup(state) {
     }
   }
 
-  const f16 = await axios.get("objs/spaceship01.json");
-  CG.f16 = new CG.Model(f16.data);
+  //const f16 = await axios.get("objs/spaceship01.json");
+  //CG.f16 = new CG.Model(f16.data);
 
   const images = await imgutil.loadImagesPromise(paths);
 
@@ -263,10 +261,10 @@ async function setup(state) {
 
   state.cursor = ScreenCursor.trackCursor(MR.getCanvas());
 
-  CG.ibo = gl.createBuffer();
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CG.ibo);
-  CG.vbo = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, CG.vbo);
+  //CG.ibo = gl.createBuffer();
+  //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CG.ibo);
+  //CG.vbo = gl.createBuffer();
+  //gl.bindBuffer(gl.ARRAY_BUFFER, CG.vbo);
 
   CG.aPos = gl.getAttribLocation(state.program, 'aPos');
   CG.aNor = gl.getAttribLocation(state.program, 'aNor');
@@ -628,11 +626,11 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     shape.draw();
   }
 
-  m.translate(0, 0, 1000);
-  m.rotateY(state.time)
-  m.scale(.4);
-  drawShape(CG.f16, [1, 1, 1]);
-  return;
+  //m.translate(0, 0, 1000);
+  //m.rotateY(state.time)
+  //m.scale(.4);
+  //drawShape(CG.f16, [1, 1, 1]);
+  //return;
 
    /*-----------------------------------------------------------------
 
