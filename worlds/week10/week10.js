@@ -174,6 +174,10 @@ async function setup(state) {
     }
   }
 
+  // MODEL TEST
+  //const f16 = await axios.get("objs/spaceship01.json");
+  //CG.f16 = new CG.Model(f16.data);
+
   const images = await imgutil.loadImagesPromise(paths);
 
   let libSources = await MREditor.loadAndRegisterShaderLibrariesForLiveEditing(gl, "libs", [
@@ -783,6 +787,14 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
   create_scene();
   miniature();
+
+  // MODEL TEST
+  //m.save();
+  //  m.translate(0, 0, -40);
+  //  m.rotateX(state.time);
+  //  m.scale(.01);
+  //  drawShape(CG.f16, [1, 1, 1]);
+  //m.restore();
 
    /*-----------------------------------------------------------------
       Here is where we draw avatars and controllers.
