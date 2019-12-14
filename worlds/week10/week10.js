@@ -155,9 +155,14 @@ async function setup(state) {
 
    // I propose adding a dictionary mapping texture strings to locations, so that drawShapes becomes clearer
    const images = await imgutil.loadImagesPromise([
+      getPath("textures/solar.jpg"),
+      getPath("textures/earth.jpg"),
+      getPath("textures/1.jpg"),
       getPath("textures/wood.png"),
       getPath("textures/tiles.jpg"),
-      getPath("textures/noisy_bump.jpg")
+      getPath("textures/noisy_bump.jpg"),
+      getPath("textures/stones.jpg"),
+      getPath("textures/brick.png"),
    ]);
 
    let libSources = await MREditor.loadAndRegisterShaderLibrariesForLiveEditing(gl, "libs", [
@@ -209,11 +214,13 @@ async function setup(state) {
                state.uTimeLoc     = gl.getUniformLocation(program, 'uTime');
                state.uToonLoc     = gl.getUniformLocation(program, 'uToon');
                state.uViewLoc     = gl.getUniformLocation(program, 'uView');
-                     state.uTexLoc = [];
-                     for (let n = 0 ; n < 8 ; n++) {
-                        state.uTexLoc[n] = gl.getUniformLocation(program, 'uTex' + n);
-                        gl.uniform1i(state.uTexLoc[n], n);
-                     }
+
+               state.uTexLoc = [];
+               for (let n = 0 ; n < 8 ; n++) {
+                  state.uTexLoc[n] = gl.getUniformLocation(program, 'uTex' + n );
+                  // state.uTexLoc[n] = gl.getUniformLocation(program, 'uTex[' + n +']');
+                  gl.uniform1i(state.uTexLoc[n], n);
+               }
          } 
       },
       {
@@ -542,13 +549,6 @@ function onDraw(t, projMat, viewMat, state, eyeIdx) {
    m.save();
       myDraw(t, projMat, viewMat, state, eyeIdx, false);
    m.restore();
-
-   m.save();
-      m.translate(HALL_WIDTH/2 - TABLE_DEPTH/2, -TABLE_HEIGHT*1.048, TABLE_WIDTH/6.7);
-      m.rotateY(Math.PI);
-      m.scale(.1392);
-      myDraw(t, projMat, viewMat, state, eyeIdx, true);
-   m.restore();
 }
 
 function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
@@ -649,6 +649,22 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
          }
       m.restore();
    }
+
+   let drawStar= (location, R, textureId) => {
+      m.save();
+         m.translate(location[0], location[1], location[2]);
+         m.scale(R, R, R);
+         drawShape(CG.sphere, [1,1,1], textureId);
+      m.restore();
+   };
+
+   let drawPlanet= (location, R, r, T, textureId, phi=0) => {
+      m.save();
+         m.translate(location[0] + r*Math.cos(Math.PI*2 / T *state.time+phi), location[1], location[2]+r*Math.sin(Math.PI*2 / T * state.time+phi));
+         m.scale(R, R, R);
+         drawShape(CG.sphere, [1,1,1], textureId);
+      m.restore();
+   };
 
     /*-----------------------------------------------------------------
 
@@ -798,74 +814,148 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
     -----------------------------------------------------------------*/
 
-   m.save();
-      let dy = isMiniature ? 0 : HALL_WIDTH/2;
-      m.translate(0, dy, 0);
-      m.scale(-HALL_WIDTH/2, -dy, -HALL_LENGTH/2);
-      drawShape(CG.cube, [1,1,1], 1,4, 2,4);
-   m.restore();
+   // m.save();
+   //    m.scale(1, 1, 1);
+   //    m.translate(-1, -1, -1);
+   //    drawShape(CG.inward_sphere, [1,1,1]);
+   // m.restore();
 
-   m.save();
-      m.translate((HALL_WIDTH - TABLE_DEPTH) / 2, 0, 0);
-      drawTable(0);
-   m.restore();
+   // m.save();
+   //    let dy = isMiniature ? 0 : HALL_WIDTH/2;
+   //    m.translate(0, dy, 0);
+   //    m.scale(-HALL_WIDTH/2, -dy, -HALL_LENGTH/2);
+   //    drawShape(CG.cube, [1,1,1], 1,4, 2,4);
+   // m.restore();
 
-   m.save();
-      m.translate((TABLE_DEPTH - HALL_WIDTH) / 2, 0, 0);
-      drawTable(1);
-   m.restore();
+   // m.save();
+   //    m.translate((HALL_WIDTH - TABLE_DEPTH) / 2, 0, 0);
+   //    drawTable(0);
+   // m.restore();
 
-   // DRAW TEST SHAPE
+   // m.save();
+   //    m.translate((TABLE_DEPTH - HALL_WIDTH) / 2, 0, 0);
+   //    drawTable(1);
+   // m.restore();
 
-   m.save();
-      m.translate(0, 2 * TABLE_HEIGHT, (TABLE_DEPTH - HALL_WIDTH) / 2);
-      //m.aimZ([Math.cos(state.time),Math.sin(state.time),0]);
-      m.rotateY(state.time);
-      m.scale(.06,.06,.6);
-      //drawShape(lathe, [1,.2,0]);
-      m.restore();
-
-      let A = [0,0,0];
-      let B = [1+.4*Math.sin(2 * state.time),.4*Math.cos(2 * state.time),0];
-      let C = CG.ik(.7,.7,B,[0,-1,-2]);
-
+   let create_scene = () => { 
       m.save();
-      m.translate(-.5, 2.5 * TABLE_HEIGHT, (TABLE_DEPTH - HALL_WIDTH) / 2);
-      //m.rotateY(state.time);
-      /*
-      m.save();
-         m.translate(A[0],A[1],A[2]).scale(.07);
-         drawShape(CG.sphere, [1,1,1]);
+         let loc = [-200, 200, -600];
+         m.save();
+            drawStar(loc, 150, 0);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 50, 200, 10, 2);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 20, 200, 30, 1, 20);
+         m.restore();
       m.restore();
 
       m.save();
-         m.translate(B[0],B[1],B[2]).scale(.07);
-         drawShape(CG.sphere, [1,1,1]);
+         loc = [-500, -200, -600];
+         // m.rotateZ(45);
+         m.save();
+            drawStar(loc, 150, 1);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 50, 300, 10, 2);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 40, 250, 15, 0, 30);
+         m.restore();
       m.restore();
 
       m.save();
-         m.translate(C[0],C[1],C[2]).scale(.07);
-         drawShape(CG.sphere, [1,1,1]);
-      m.restore();
-      */
-      state.isToon = true;
-      let skinColor = [1,.5,.3], D;
-      m.save();
-         D = CG.mix(A,C,.5);
-         m.translate(D[0],D[1],D[2]);
-         m.aimZ(CG.subtract(A,C));
-         m.scale(.05,.05,.37);
-         drawShape(lathe, skinColor, -1,1, 2,1);
+         loc = [400, 250, -400];
+         // m.rotateZ(45);
+         m.save();
+            drawStar(loc, 150, 2);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 50, 200, 10, 1);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 40, 300, 15, 0, 30);
+         m.restore();
       m.restore();
 
       m.save();
-         D = CG.mix(C,B,.5);
-         m.translate(D[0],D[1],D[2]).aimZ(CG.subtract(C,B)).scale(.03,.03,.37);
-         drawShape(lathe, skinColor, -1,1, 2,1);
+         loc = [400, -250, -500];
+         // m.rotateZ(45);
+         m.save();
+            drawStar(loc, 150);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 40, 200, 10, 2);
+         m.restore();
+         m.save();
+            drawPlanet(loc, 30, 250, 15, 3, 30);
+         m.restore();
       m.restore();
-      state.isToon = false;
+   };
+   // miniature
+   let miniature = () => {
+      m.save();
+      m.translate(0, EYE_HEIGHT*0.8, 0);
+      m.scale(0.0002, 0.0002, 0.0002);
+      create_scene();
+      m.restore();
+   };
 
-   m.restore();
+   create_scene();
+   miniature();
+
+   // DRAW TEST SHAPE: Arm
+
+   // m.save();
+   //    m.translate(0, 2 * TABLE_HEIGHT, (TABLE_DEPTH - HALL_WIDTH) / 2);
+   //    //m.aimZ([Math.cos(state.time),Math.sin(state.time),0]);
+   //    m.rotateY(state.time);
+   //    m.scale(.06,.06,.6);
+   //    //drawShape(lathe, [1,.2,0]);
+   //    m.restore();
+
+   //    let A = [0,0,0];
+   //    let B = [1+.4*Math.sin(2 * state.time),.4*Math.cos(2 * state.time),0];
+   //    let C = CG.ik(.7,.7,B,[0,-1,-2]);
+
+   //    m.save();
+   //    m.translate(-.5, 2.5 * TABLE_HEIGHT, (TABLE_DEPTH - HALL_WIDTH) / 2);
+   //    //m.rotateY(state.time);
+   //    /*
+   //    m.save();
+   //       m.translate(A[0],A[1],A[2]).scale(.07);
+   //       drawShape(CG.sphere, [1,1,1]);
+   //    m.restore();
+
+   //    m.save();
+   //       m.translate(B[0],B[1],B[2]).scale(.07);
+   //       drawShape(CG.sphere, [1,1,1]);
+   //    m.restore();
+
+   //    m.save();
+   //       m.translate(C[0],C[1],C[2]).scale(.07);
+   //       drawShape(CG.sphere, [1,1,1]);
+   //    m.restore();
+   //    */
+   //    state.isToon = true;
+   //    let skinColor = [1,.5,.3], D;
+   //    m.save();
+   //       D = CG.mix(A,C,.5);
+   //       m.translate(D[0],D[1],D[2]);
+   //       m.aimZ(CG.subtract(A,C));
+   //       m.scale(.05,.05,.37);
+   //       drawShape(lathe, skinColor, -1,1, 2,1);
+   //    m.restore();
+
+   //    m.save();
+   //       D = CG.mix(C,B,.5);
+   //       m.translate(D[0],D[1],D[2]).aimZ(CG.subtract(C,B)).scale(.03,.03,.37);
+   //       drawShape(lathe, skinColor, -1,1, 2,1);
+   //    m.restore();
+   //    state.isToon = false;
+
+   // m.restore();
       /*-----------------------------------------------------------------
         Here is where we draw avatars and controllers.
       -----------------------------------------------------------------*/
