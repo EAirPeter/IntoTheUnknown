@@ -372,13 +372,11 @@ function sendSpawnMessage(object){
 
 // spaceship
 let ship = {
+  maxSpeed: 800,
+  maxRot: .04,
   loc: [0, 0, 0],
-  dir: [0, 0, -1],
+  rot: CG.matrixIdentity(),
   speed: 0,
-  pitch: 0,
-  bank: 0,
-  dPitch: 0,
-  dBank: 0,
 }
 
 // pilot stick
@@ -441,6 +439,9 @@ function onStartFrame(t, state) {
   if (!state.tStart)
     state.tStart = t;
   state.time = (t - state.tStart) / 1000;
+
+  let dt = state.time - last_time;
+  last_time = state.time;
 
    // THIS CURSOR CODE IS ONLY RELEVANT WHEN USING THE BROWSER MOUSE, NOT WHEN IN VR MODE.
 
@@ -537,8 +538,6 @@ function onStartFrame(t, state) {
   // pilot stick
   if (stick.active != null && !stick.active.isGrasping()) {
     stick.active = null;
-    ship.dPitch = 0;
-    ship.dBank = 0;
     stick.Q = [0, 0, 0, 1];
   }
   for (let i = 0; i < Cs.length; ++i) {
@@ -558,8 +557,8 @@ function onStartFrame(t, state) {
       let s = Math.sin(p);
       D = [Math.sin(t) * c, s, Math.cos(t) * c];
       p = (Math.PI * .5 - p) / (Math.PI * .5 - stick.lim);
-      ship.dBank = -Math.sin(t) * p;
-      ship.dPitch = Math.cos(t) * p;
+      ship.rot = CG.matrixMultiply(CG.matrixRotateZ(+ship.maxRot * Math.sin(t) * p), ship.rot);
+      ship.rot = CG.matrixMultiply(CG.matrixRotateX(-ship.maxRot * Math.cos(t) * p), ship.rot);
       let A = CG.cross([0, 1, 0], D);
       t = Math.acos(CG.dot([0, 1, 0], D));
       c = Math.cos(t * .5);
@@ -581,9 +580,11 @@ function onStartFrame(t, state) {
       lever.active = C;
     if (lever.active == C) {
       lever.theta = CG.clamp(t, -lever.lim, lever.lim);
-      ship.speed = 1000 * lever.theta / lever.lim;
+      ship.speed = ship.maxSpeed * lever.theta / lever.lim;
     }
   }
+
+  ship.loc = CG.add(ship.loc, CG.matrixTransform(CG.matrixTranspose(ship.rot), [0, 0, -ship.speed * dt, 0]));
 
    /*-----------------------------------------------------------------
 
@@ -1024,17 +1025,11 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
-  let dt = state.time - last_time;
-  // console.log(dt);
 
   if (out_side === 0) {
     m.save();
-      ship.loc = CG.add(ship.loc, CG.scale(ship.dir, ship.speed * dt));
-      ship.pitch += ship.dPitch * dt;
-      ship.bank += ship.dBank * dt;
+      m.multiply(ship.rot);
       m.translate(-ship.loc[0], -ship.loc[1], -ship.loc[2]);
-      m.rotateX(-ship.pitch);
-      m.rotateZ(-ship.bank);
       drawMilkyWay();
       drawSolarSystem();
       drawAsteroidBelt();
@@ -1048,8 +1043,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       drawSolarSystem();
     m.restore();
   }
-
-  last_time = state.time;
 
    /*-----------------------------------------------------------------
       Here is where we draw avatars and controllers.
