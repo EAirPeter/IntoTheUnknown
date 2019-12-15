@@ -719,7 +719,17 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
    is a useful general trick for creating interiors.
 
    -----------------------------------------------------------------*/
-  // let planetRadiusScale = 30, planetDistanceScale = 10;
+
+  let drawMilkyWay = () => {
+    m.save();
+    let scale = -16000;
+    m.translate(0, EYE_HEIGHT * 0.8, -1);
+    m.rotateY(Math.PI/2);
+    m.rotateX(Math.PI/2);
+    m.scale(scale, scale, scale);
+    drawShape(CG.sphere, [1,1,1], state.mats.milky_way);
+    m.restore();
+  };
 
   let solarSystemData = {
     star: {
@@ -814,7 +824,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
-  let create_scene = (isMiniature) => {
+  let create_scene = () => {
     // draw solar system
     m.save();
       let sunLoc = [-1000, 0, -4000];
@@ -832,56 +842,43 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       let miniatureScale = 0.00004;
       m.translate(0, EYE_HEIGHT * 0.8, -0.3);
       m.scale(miniatureScale, miniatureScale, miniatureScale);
-      create_scene(true);
+      create_scene();
     m.restore();
   };
-
-  let drawMilkyWay = () => {
-    m.save();
-      let scale = -16000;
-      m.translate(0, EYE_HEIGHT * 0.8, -1);
-      m.rotateY(Math.PI/2);
-      m.rotateX(Math.PI/2);
-      m.scale(scale, scale, scale);
-      drawShape(CG.sphere, [1,1,1], state.mats.milky_way);
-    m.restore();
-  };
-
-  drawMilkyWay();
 
 
   if (input.LC) {
-    if(input.RC.press()) {
+    if (input.RC.press()) {
       angle_w[0] += 0.1;
     }
   }
 
-   if(input.RC && input.LC.press()) {
-      angle_w[1] += 0.1;
-   }
+  if (input.RC && input.LC.press()) {
+    angle_w[1] += 0.1;
+  }
 
-   let dt = state.time - last_time;
-   // console.log(dt);
+  let dt = state.time - last_time;
+  // console.log(dt);
 
-   if(out_side == 0) {
-      m.save();
-      ship_loc = CG.add(ship_loc, CG.scale(dir, speed*dt));
-      angle[0] += angle_w[0]*dt;
-      angle[1] += angle_w[1]*dt;
+  if (out_side === 0) {
+    m.save();
+      ship_loc = CG.add(ship_loc, CG.scale(dir, speed * dt));
+      angle[0] += angle_w[0] * dt;
+      angle[1] += angle_w[1] * dt;
       m.translate(-ship_loc[0], -ship_loc[1], -ship_loc[2]);
       m.rotateY(-angle[1]);
       m.rotateZ(-angle[0]);
-      create_scene(false);
-      miniature();
-      m.restore();
-   }
-   else {
-      m.save();
-      arm_loc = CG.add(ship_loc, arm_loc);
-      m.translate(-arm_loc[0], -arm_loc[1], -arm_loc[2]);
-      create_scene(false);
-      m.restore();
-   }
+      drawMilkyWay();
+      create_scene();
+    m.restore();
+    miniature();
+  } else {
+    m.save();
+    arm_loc = CG.add(ship_loc, arm_loc);
+    m.translate(-arm_loc[0], -arm_loc[1], -arm_loc[2]);
+    create_scene();
+    m.restore();
+  }
 
    last_time = state.time;
 
@@ -953,11 +950,11 @@ function onEndFrame(t, state) {
     // i.e. a speaker, or an drum in the room.
     // You must provide the path given, when you construct the audio context.
 
-    if (input.LC && input.LC.press())
-      this.audioContext1.playFileAt('assets/audio/blop.wav', input.LC.position());
+    // if (input.LC && input.LC.press())
+    //   this.audioContext1.playFileAt('assets/audio/blop.wav', input.LC.position());
 
-    if (input.RC && input.RC.press())
-      this.audioContext2.playFileAt('assets/audio/peacock.wav', input.RC.position());
+    // if (input.RC && input.RC.press())
+    //   this.audioContext2.playFileAt('assets/audio/peacock.wav', input.RC.position());
   }
 
   if (input.LC) input.LC.onEndFrame();
