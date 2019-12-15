@@ -37,6 +37,7 @@ let texs = {
   saturn_ring:  {img: "6saturn_ring.png"},
   uranus:       {img: "7uranus.jpg"},
   neptune:      {img: "8neptune.jpg"},
+  milky_way:    {img: "milky_way.jpg"},
 };
 
 let getMats = () => { return {
@@ -53,6 +54,7 @@ let getMats = () => { return {
   saturn_ring:[texs.saturn_ring.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   uranus:     [texs.uranus.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   neptune:    [texs.neptune.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  milky_way:  [texs.milky_way.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
 }};
 
 let noise = new ImprovedNoise();
@@ -535,12 +537,12 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
    -----------------------------------------------------------------*/
 
-  let drawShape = (shape, color, mat, texScale) => {
+  let drawShape = (shape, color, mat, texScale, spec) => {
     if (!mat)
       mat = state.mats.trivial;
     gl.uniform3fv(state.uAmbiLoc, CG.scale(color, .1));
     gl.uniform3fv(state.uDiffLoc, CG.scale(color, .5));
-    gl.uniform4fv(state.uSpecLoc, [.4, .4, .4, 30]);
+    gl.uniform4fv(state.uSpecLoc, spec ? spec : [0, 0, 0, 1]);
     gl.uniformMatrix4fv(state.uModelLoc, false, m.value());
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, mat[0]);
@@ -704,88 +706,136 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
    is a useful general trick for creating interiors.
 
    -----------------------------------------------------------------*/
+  // let planetRadiusScale = 30, planetDistanceScale = 10;
 
-  let drawStar = (location, star, mat) => {
-    m.save();
-    m.translate(location[0], location[1], location[2]);
-    m.scale(star.radius, star.radius, star.radius);
-    drawShape(CG.sphere, [1,1,1], mat);
-    m.restore();
-  };
-
-  let drawPlanet = (location, planet, T, mat, phi = 0) => {
-    m.save();
-    m.translate(location[0] + planet.distance * Math.cos(Math.PI * 2 / T * state.time + phi),
-        location[1], location[2] + planet.distance * Math.sin(Math.PI * 2 / T * state.time + phi));
-    m.scale(planet.radius, planet.radius, planet.radius);
-    drawShape(CG.sphere, [1, 1, 1], mat);
-    m.restore();
-  };
-
-  let planetRadiusScale = 3, planetDistanceScale = 0.4;
   let solarSystemData = {
-    sun: {radius: 10},
-    mercury: {radius: 0.648 * planetRadiusScale, distance: 61.36 * planetDistanceScale},
-    venus: {radius: 0.8 * planetRadiusScale, distance: 77.29 * planetDistanceScale},
-    earth: {radius: 0.9 * planetRadiusScale, distance: 106.86 * planetDistanceScale},
-    mars: {radius: 0.68 * planetRadiusScale, distance: 132.86 * planetDistanceScale},
-    jupiter: {radius: 2.5 * planetRadiusScale, distance: 175.93 * planetDistanceScale},
-    saturn: {radius: 2.1 * planetRadiusScale, distance: 230 * planetDistanceScale},
-    uranus: {radius: 1.35 * planetRadiusScale, distance: 265 * planetDistanceScale},
-    neptune: {radius: 1.34 * planetRadiusScale, distance: 317 * planetDistanceScale},
+    star: {
+      sun: {
+        radius: 500,
+        mat: state.mats.sun,
+      }
+    },
+    planet: {
+      mercury: {
+        rotateZ: -0.2,
+        radius: 140,
+        distance: 1500,
+        mat: state.mats.mercury,
+        T: 1000,
+        phi: 10,
+      },
+      venus: {
+        rotateZ: -0.11,
+        radius: 160,
+        distance: 3000,
+        mat: state.mats.venus,
+        T: 1200,
+        phi: 200,
+      },
+      earth: {
+        rotateZ: 0,
+        radius: 180,
+        distance: 4500,
+        mat: state.mats.earth,
+        T: 1500,
+        phi: 30,
+      },
+      mars: {
+        rotateZ: -0.05,
+        radius: 140,
+        distance: 6000,
+        mat: state.mats.mars,
+        T: 1800,
+        phi: -300,
+      },
+      jupiter: {
+        rotateZ: 0,
+        radius: 300,
+        distance: 8000,
+        mat: state.mats.jupiter,
+        T: 2300,
+        phi: 50,
+      },
+      saturn: {
+        rotateZ: 0.1,
+        radius: 260,
+        distance: 9000,
+        mat: state.mats.saturn,
+        T: 2700,
+        phi: 60,
+      },
+      uranus: {
+        rotateZ: 0.04,
+        radius: 200,
+        distance: 10000,
+        mat: state.mats.uranus,
+        T: 3100,
+        phi: 70,
+      },
+      neptune: {
+        rotateZ: 0,
+        radius: 200,
+        distance: 11000,
+        mat: state.mats.neptune,
+        T: 3700,
+        phi: 80,
+      }
+    }
   };
 
-  let create_scene = () => {
-    // draw stars and planets
+  let drawStar = (location, star) => {
     m.save();
-      let loc = [0, 0, -200];
-      m.save();
-        drawStar(loc, solarSystemData.sun, state.mats.sun);
-        m.save();
-          m.rotateZ(-0.2);
-          drawPlanet(loc, solarSystemData.mercury, 10, state.mats.mercury);
-        m.restore();
-        m.save();
-          m.rotateZ(-0.1);
-          drawPlanet(loc, solarSystemData.venus, 12, state.mats.venus, 20);
-        m.restore();
-        m.save();
-          m.rotateZ(0);
-          drawPlanet(loc, solarSystemData.earth, 15, state.mats.earth, 30);
-        m.restore();
-        m.save();
-          m.rotateZ(-0.05);
-          drawPlanet(loc, solarSystemData.mars, 18, state.mats.mars, 40);
-        m.restore();
-        m.save();
-          m.rotateZ(0);
-          drawPlanet(loc, solarSystemData.jupiter, 23, state.mats.jupiter, 50);
-        m.restore();
-        m.save();
-          m.rotateZ(0.1);
-          drawPlanet(loc, solarSystemData.saturn, 27, state.mats.saturn, 60);
-        m.restore();
-        m.save();
-          m.rotateZ(0.05);
-          drawPlanet(loc, solarSystemData.uranus, 31, state.mats.uranus, 70);
-        m.restore();
-        m.save();
-          m.rotateZ(0);
-          drawPlanet(loc, solarSystemData.neptune, 37, state.mats.neptune, 80);
-        m.restore();
+      m.translate(location[0], location[1], location[2]);
+      m.scale(star.radius, star.radius, star.radius);
+      drawShape(CG.sphere, [1,1,1], star.mat);
     m.restore();
   };
-  // miniature of background
+
+  let drawPlanet = (location, planet) => {
+    m.save();
+      m.rotateZ(planet.rotateZ);
+      m.translate(location[0] + planet.distance * Math.cos(Math.PI * 2 / planet.T * state.time + planet.phi),
+          location[1], location[2] + planet.distance * Math.sin(Math.PI * 2 / planet.T * state.time + planet.phi));
+      m.scale(planet.radius, planet.radius, planet.radius);
+      drawShape(CG.sphere, [1, 1, 1], planet.mat);
+    m.restore();
+  };
+
+  let create_scene = (isMiniature) => {
+    // draw solar system
+    m.save();
+      let sunLoc = [-1000, 0, -4000];
+      drawStar(sunLoc, solarSystemData.star.sun);
+      for (const p in solarSystemData.planet) {
+        if (solarSystemData.planet.hasOwnProperty(p)) {
+          drawPlanet(sunLoc, solarSystemData.planet[p]);
+        }
+      }
+    m.restore();
+  };
+  // miniature of solar system
   let miniature = () => {
     m.save();
-      let miniatureScale = 0.001;
-      m.translate(0, EYE_HEIGHT * 0.8, 0);
+      let miniatureScale = 0.00004;
+      m.translate(0, EYE_HEIGHT * 0.8, -0.3);
       m.scale(miniatureScale, miniatureScale, miniatureScale);
-      create_scene();
+      create_scene(true);
     m.restore();
   };
 
-  create_scene();
+  let drawMilkyWay = () => {
+    m.save();
+      let scale = -16000;
+      m.translate(0, EYE_HEIGHT * 0.8, -1);
+      m.rotateY(Math.PI/2);
+      m.rotateX(Math.PI/2);
+      m.scale(scale, scale, scale);
+      drawShape(CG.sphere, [1,1,1], state.mats.milky_way);
+    m.restore();
+  };
+
+  drawMilkyWay();
+  create_scene(false);
   miniature();
 
    /*-----------------------------------------------------------------
