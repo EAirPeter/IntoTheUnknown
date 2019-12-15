@@ -810,6 +810,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.save();
       m.translate(location[0], location[1], location[2]);
       m.scale(star.radius, star.radius, star.radius);
+      m.rotateX(Math.PI / 2);
       drawShape(CG.sphere, [1,1,1], star.mat);
     m.restore();
   };
@@ -820,11 +821,12 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.translate(location[0] + planet.distance * Math.cos(Math.PI * 2 / planet.T * state.time + planet.phi),
           location[1], location[2] + planet.distance * Math.sin(Math.PI * 2 / planet.T * state.time + planet.phi));
       m.scale(planet.radius, planet.radius, planet.radius);
+      m.rotateX(Math.PI / 2);
       drawShape(CG.sphere, [1, 1, 1], planet.mat);
     m.restore();
   };
 
-  let create_scene = () => {
+  let drawSolarSystem = () => {
     // draw solar system
     m.save();
       let sunLoc = [-1000, 0, -4000];
@@ -842,7 +844,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       let miniatureScale = 0.00004;
       m.translate(0, EYE_HEIGHT * 0.8, -0.3);
       m.scale(miniatureScale, miniatureScale, miniatureScale);
-      create_scene();
+      drawSolarSystem();
     m.restore();
   };
 
@@ -869,18 +871,18 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.rotateY(-angle[1]);
       m.rotateZ(-angle[0]);
       drawMilkyWay();
-      create_scene();
+      drawSolarSystem();
     m.restore();
     miniature();
   } else {
     m.save();
-    arm_loc = CG.add(ship_loc, arm_loc);
-    m.translate(-arm_loc[0], -arm_loc[1], -arm_loc[2]);
-    create_scene();
+      arm_loc = CG.add(ship_loc, arm_loc);
+      m.translate(-arm_loc[0], -arm_loc[1], -arm_loc[2]);
+      drawSolarSystem();
     m.restore();
   }
 
-   last_time = state.time;
+  last_time = state.time;
 
 
    /*-----------------------------------------------------------------
