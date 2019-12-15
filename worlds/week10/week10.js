@@ -890,6 +890,13 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
   let dt = state.time - last_time;
   // console.log(dt);
+  sendMotionMessage(ship_loc, speed, angle, angle_w, dir);
+
+  ship_loc = MR.ship_loc;
+  speed = MR.speed;
+  angle = MR.angle;
+  angle_w = MR.angle_w;
+  dir = MR.dir;
 
   if (out_side === 0) {
     m.save();
@@ -911,7 +918,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       drawSolarSystem();
     m.restore();
   }
-  sendMotionMessage();
+  sendMotionMessage(ship_loc, speed, angle, angle_w, dir);
   last_time = state.time;
 
 
