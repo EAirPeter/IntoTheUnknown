@@ -953,11 +953,15 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
   let drawAsteroid = (i, pos) => {
     m.save();
-      m.translate(pos[0], pos[1], pos[2]);
-      m.rotateX(0.2 * state.time);
-      m.rotateY(0.5 * state.time);
-      m.rotateZ(0.3 * state.time);
-      m.scale(asteroidScale[i], asteroidScale[i], asteroidScale[i]);
+      let x = pos[0] + 40 * noise.noise(3 * pos[0], 4 * pos[1], 5 * pos[2]);
+      let y = pos[1] + 40 * noise.noise(3 * pos[0], 4 * pos[1], 8 * pos[2]);
+      let z = pos[2] + 20 * noise.noise(8 * pos[0], 1 * pos[1], 3 * pos[2]);
+      m.translate(x, y, z);
+      m.rotateX(noise.noise(pos[0], pos[1], pos[2]) * state.time);
+      m.rotateY(noise.noise(pos[0], pos[1], pos[2]) * state.time);
+      m.rotateZ(noise.noise(pos[0], pos[1], pos[2]) * state.time);
+      let s = (0.75 + Math.abs(Math.cos(noise.noise(3 * pos[0], 4 * pos[1], 5 * pos[2]))) / 2) * asteroidScale[i];
+      m.scale(s, s, s);
       m.translate(asteroidCenterPosAdjustment[i]);
       let modelName = "asteroid" + i;
       drawShape(CG[modelName], [1, 1, 1], state.mats.asteroid);
@@ -965,23 +969,25 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   };
 
   let drawAsteroidBelt = () => {
-    // drawAsteroid(1, [-10, 2, -8]);
-    // drawAsteroid(2, [0, 2, -8]);
-    // drawAsteroid(3, [10, 2, -8]);
-    let i = 1;
-    let interval = 100;
+    let interval = 27.1;
     let r = 3;
-    let xCenter = Math.floor(ship.loc[0] / interval) * interval - interval / 2;
-    let yCenter = Math.floor(ship.loc[1] / interval) * interval - interval / 2;
-    let zCenter = Math.floor(ship.loc[2] / interval) * interval - interval / 2;
-    for (let x = xCenter - r * interval; x <= xCenter + r * interval; x += interval) {
-      for (let y = yCenter - r * interval; y <= yCenter + r * interval; y += interval) {
-        for (let z = zCenter - interval; z <= zCenter + 2 * r * interval; z += interval) {
-          drawAsteroid(1, [x, y, z]);
-          if (i > 3) i = 1;
+    let drawByCenter = (xCenter, yCenter, zCenter) => {
+      for (let x = xCenter - r * interval; x <= xCenter + r * interval; x += interval) {
+        for (let y = yCenter - r * interval; y <= yCenter + r * interval; y += interval) {
+          for (let z = zCenter - 2 * r * interval; z <= zCenter + interval; z += interval) {
+            drawAsteroid(1, [x, y, z]);
+          }
         }
       }
-    }
+    };
+    let xCenter = Math.floor(ship.loc[0] / interval) * interval - interval / 3;
+    let yCenter = Math.floor(ship.loc[1] / interval) * interval - interval / 3;
+    let zCenter = Math.floor(ship.loc[2] / interval) * interval - interval / 3;
+    drawByCenter(xCenter, yCenter, zCenter);
+    xCenter = xCenter + 2 * interval / 3;
+    yCenter = yCenter + 2 * interval / 3;
+    zCenter = zCenter + 2 * interval / 3;
+    drawByCenter(xCenter, yCenter, zCenter);
   };
 
   let drawShip = () => {
