@@ -203,11 +203,18 @@ async function setup(state) {
     }
   }
 
-  // MODEL TEST
-  const asteroid2 = await axios.get("objs/asteroid2.json");
-  CG.asteroid2 = new CG.Model(asteroid2.data);
-  const asteroid3 = await axios.get("objs/asteroid3.json");
-  CG.asteroid3 = new CG.Model(asteroid3.data);
+  // Load models
+  let loadJsonModel = async (modelName) => {
+    const model = await axios.get("objs/" + modelName + ".json");
+    CG[modelName] = new CG.Model(model.data);
+  };
+  await loadJsonModel("asteroid1");
+  await loadJsonModel("asteroid2");
+  await loadJsonModel("asteroid3");
+  // const asteroid2 = await axios.get("objs/asteroid2.json");
+  // CG.asteroid2 = new CG.Model(asteroid2.data);
+  // const asteroid3 = await axios.get("objs/asteroid3.json");
+  // CG.asteroid3 = new CG.Model(asteroid3.data);
 
   const images = await imgutil.loadImagesPromise(paths);
 
@@ -739,6 +746,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
+  let sunLoc = [-1000, 0, -4000];
   let solarSystemData = {
     star: {
       sun: {
@@ -814,6 +822,17 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     }
   };
 
+  let asteroidCenterPosAdjustment = {
+    "1": [-15, -90, -10],
+    "2": [0, 0, 0],
+    "3": [0, 0, 0],
+  };
+  let asteroidScale = {
+    "1": 0.05,
+    "2": 0.1,
+    "3": 4,
+  };
+
   let drawStar = (location, star) => {
     m.save();
       m.translate(location[0], location[1], location[2]);
@@ -837,7 +856,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   let drawSolarSystem = () => {
     // draw solar system
     m.save();
-      let sunLoc = [-1000, 0, -4000];
       drawStar(sunLoc, solarSystemData.star.sun);
       for (const p in solarSystemData.planet) {
         if (solarSystemData.planet.hasOwnProperty(p)) {
@@ -846,6 +864,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       }
     m.restore();
   };
+
   // miniature of solar system
   let miniature = () => {
     m.save();
@@ -856,12 +875,31 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
+  let drawAsteroid = (i, pos) => {
+    m.save();
+      m.translate(pos[0], pos[1], pos[2]);
+      m.rotateX(0.2 * state.time);
+      m.rotateY(0.5 * state.time);
+      m.rotateZ(0.3 * state.time);
+      m.scale(asteroidScale[i], asteroidScale[i], asteroidScale[i]);
+      m.translate(asteroidCenterPosAdjustment[i]);
+      let modelName = "asteroid" + i;
+      drawShape(CG[modelName], [1, 1, 1], state.mats.asteroid);
+    m.restore();
+  };
+
+  let drawAsteroidBelt = () => {
+    drawAsteroid(1, [-10, 2, -8]);
+    drawAsteroid(2, [0, 2, -8]);
+    drawAsteroid(3, [10, 2, -8]);
+  };
+
   let drawShip = () => {
     m.save();
-      m.translate(2, 0, -2);
+      m.translate(-2, 0, 2);
       m.rotateX(-Math.PI / 2);
-      m.scale(-4, -4, -4);
-      drawShape(CG.plane, [1, 1, 1]);
+      m.scale(4, 4, 4);
+      drawShape(CG.plane, [0, 1, 1]);
     m.restore();
   };
 
@@ -889,6 +927,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.rotateZ(-angle[0]);
       drawMilkyWay();
       drawSolarSystem();
+      drawAsteroidBelt();
     m.restore();
     drawShip();
     miniature();
