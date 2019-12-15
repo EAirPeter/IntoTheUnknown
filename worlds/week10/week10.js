@@ -303,13 +303,6 @@ async function setup(state) {
   gl.enableVertexAttribArray(CG.aTan);
   gl.enableVertexAttribArray(CG.aUV);
 
-  let bpe = Float32Array.BYTES_PER_ELEMENT;
-
-  gl.vertexAttribPointer(CG.aPos, 3, gl.FLOAT, false, bpe * VERTEX_SIZE, bpe * 0);
-  gl.vertexAttribPointer(CG.aNor, 3, gl.FLOAT, false, bpe * VERTEX_SIZE, bpe * 3);
-  gl.vertexAttribPointer(CG.aTan, 3, gl.FLOAT, false, bpe * VERTEX_SIZE, bpe * 6);
-  gl.vertexAttribPointer(CG.aUV , 2, gl.FLOAT, false, bpe * VERTEX_SIZE, bpe * 9);
-
   for (let i = 0; i < images.length; ++i) {
     let id = gl.createTexture();
     gl.bindTexture   (gl.TEXTURE_2D, id);
