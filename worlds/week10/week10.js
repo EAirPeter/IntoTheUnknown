@@ -20,10 +20,10 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 ////////////////////////////// SCENE SPECIFIC CODE
 
 let ship_loc = [0, 0, 0];
-let dir = [0, 0, 1];
+let dir = [0, 0, -1];
 let angle_w = [0, 0]; // phi, theta
 let angle = [0, 0];
-let speed = 10;
+let speed = 0;
 
 let last_time = 0;
 
@@ -93,17 +93,19 @@ to see what the options are.
 
 function HeadsetHandler(headset) {
   this.orientation = () => headset.pose.orientation;
-  this.position   = () => headset.pose.position;
+  this.position    = () => headset.pose.position;
 }
 
 function ControllerHandler(controller) {
-  this.isDown    = () => controller.buttons[1].pressed;
-  this.onEndFrame  = () => wasDown = this.isDown();
+  this.isDown      = () => controller.buttons[1].pressed;
+  this.isGrasping  = () => controller.buttons[2].pressed;
+  this.onEndFrame  = () => { wasDown = this.isDown(); wasGrasping = this.isGrasping(); }
   this.orientation = () => controller.pose.orientation;
-  this.position   = () => controller.pose.position;
-  this.press     = () => !wasDown && this.isDown();
-  this.release    = () => wasDown && !this.isDown();
-  this.tip      = () => {
+  this.position    = () => controller.pose.position;
+  this.press       = () => !wasDown && this.isDown();
+  this.release     = () => wasDown && !this.isDown();
+  this.grasp       = () => !wasGrasping && this.isGrasping();
+  this.tip         = () => {
     let P = this.position();        // THIS CODE JUST MOVES
     m.identity();                   // THE "HOT SPOT" OF THE
     m.translate(P[0],P[1],P[2]);    // CONTROLLER TOWARD ITS
@@ -122,6 +124,7 @@ function ControllerHandler(controller) {
     return [v[12],v[13],v[14]];
   };
   let wasDown = false;
+  let wasGrasping = false;
 }
 
 // (New Info): constants can be reloaded without worry
@@ -309,13 +312,6 @@ async function setup(state) {
   gl.enableVertexAttribArray(CG.aTan);
   gl.enableVertexAttribArray(CG.aUV);
 
-  let bpe = Float32Array.BYTES_PER_ELEMENT;
-
-  gl.vertexAttribPointer(CG.aPos, 3, gl.FLOAT, false, bpe * VERTEX_SIZE, bpe * 0);
-  gl.vertexAttribPointer(CG.aNor, 3, gl.FLOAT, false, bpe * VERTEX_SIZE, bpe * 3);
-  gl.vertexAttribPointer(CG.aTan, 3, gl.FLOAT, false, bpe * VERTEX_SIZE, bpe * 6);
-  gl.vertexAttribPointer(CG.aUV , 2, gl.FLOAT, false, bpe * VERTEX_SIZE, bpe * 9);
-
   for (let i = 0; i < images.length; ++i) {
     let id = gl.createTexture();
     gl.bindTexture   (gl.TEXTURE_2D, id);
@@ -379,6 +375,27 @@ function sendSpawnMessage(object){
     };
 
   MR.syncClient.send(response);
+}
+
+// pilot stick
+let stick = {
+  lim: Math.PI * .25,
+  min: .04,
+  max: .2,
+  pos: [0, 1.4, -.4],
+  active: null,
+  Q: [0, 0, 0, 1],
+};
+
+// thrust lever
+let lever = {
+  lim: Math.PI * .25,
+  wid: .06,
+  min: .04,
+  max: .2,
+  pos: [.2, 1.2, -.2],
+  active: null,
+  theta: 0,
 }
 
 function onStartFrame(t, state) {
@@ -505,6 +522,62 @@ function onStartFrame(t, state) {
         m.restore();
         state.calibrationCount = 0;
       }
+    }
+  }
+
+  let Cs = [];
+  if (input.LC && input.LC.isGrasping())
+    Cs.push(input.LC);
+  if (input.RC && input.RC.isGrasping())
+    Cs.push(input.RC);
+  // pilot stick
+  if (stick.active != null && !stick.active.isGrasping()) {
+    stick.active = null;
+    angle_w[0] = 0;
+    angle_w[1] = 0;
+    stick.Q = [0, 0, 0, 1];
+  }
+  for (let i = 0; i < Cs.length; ++i) {
+    let C = Cs[i];
+    if (stick.active != null && stick.active != C)
+      continue;
+    let D = CG.add(CG.subtract(C.position(), stick.pos), [0, EYE_HEIGHT + stick.min, 0]);
+    let d = CG.norm(D);
+    let p = Math.atan2(D[1], Math.hypot(D[2], D[0]));
+    let t = Math.atan2(D[0], D[2]);
+    let update = false;
+    if (C.grasp() && stick.min < d && d < stick.max && p >= stick.lim)
+      stick.active = C;
+    if (stick.active == C) {
+      p = CG.clamp(p, stick.lim, Math.PI * .5);
+      let c = Math.cos(p);
+      let s = Math.sin(p);
+      D = [Math.sin(t) * c, s, Math.cos(t) * c];
+      p = (Math.PI * .5 - p) / (Math.PI * .5 - stick.lim);
+      angle_w[0] = -Math.sin(t) * p;
+      angle_w[1] = Math.cos(t) * p;
+      let A = CG.cross([0, 1, 0], D);
+      t = Math.acos(CG.dot([0, 1, 0], D));
+      c = Math.cos(t * .5);
+      s = Math.sin(t * .5);
+      stick.Q = [A[0] * s, A[1] * s, A[2] * s, c];
+    }
+  }
+  // thrust lever
+  if (lever.active != null && !lever.active.isGrasping())
+    lever.active = null;
+  for (let i =  0; i < Cs.length; ++i) {
+    let C = Cs[i];
+    if (lever.active != null && lever.active != C)
+      continue;
+    let D = CG.add(CG.subtract(C.position(), lever.pos), [0, EYE_HEIGHT + lever.min, 0]);
+    let d = Math.hypot(D[1], D[2]);
+    let t = Math.atan2(-D[2], D[1]);
+    if (C.grasp() && lever.min < d && d < lever.max + .02 && Math.abs(D[0]) < lever.wid && Math.abs(t) <= lever.lim)
+      lever.active = C;
+    if (lever.active == C) {
+      lever.theta = CG.clamp(t, -lever.lim, lever.lim);
+      speed = 1000 * lever.theta / lever.lim;
     }
   }
 
@@ -895,24 +968,57 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   };
 
   let drawShip = () => {
+    // cockpit
     m.save();
       m.translate(-2, 0, 2);
       m.rotateX(-Math.PI / 2);
       m.scale(4, 4, 4);
       drawShape(CG.plane, [0, 1, 1]);
     m.restore();
+    // pilot stick
+    m.save();
+      m.translate(stick.pos[0], stick.pos[1], stick.pos[2]);
+      m.save();
+        m.translate(0, -.01, 0);
+        m.scale(.05, .01, .05);
+        drawShape(CG.cube, [1,1,1]);
+      m.restore();
+      m.save();
+        m.translate(0, -stick.min, 0);
+        m.rotateQ(stick.Q);
+        m.rotateX(Math.PI * .5);
+        m.translate(0, 0, -(stick.max + stick.min) * .5);
+        m.scale(.01, .01, (stick.max - stick.min) * .5);
+        drawShape(CG.cylinder, [1,1,1]);
+      m.restore();
+    m.restore();
+    // thrust lever
+    m.save();
+      m.translate(lever.pos[0], lever.pos[1], lever.pos[2]);
+      m.save();
+        m.translate(0, -.01, 0);
+        m.scale(lever.wid + .02, .01, .05);;
+        drawShape(CG.cube, [1,1,1]);
+      m.restore();
+      m.save();
+        m.translate(0, -lever.min, 0);
+        m.rotateX(-lever.theta);
+        m.translate(0, lever.max, 0);
+        m.rotateY(Math.PI * .5);
+        m.scale(.016, .016, lever.wid + .02);
+        drawShape(CG.cylinder, [1,1,1]);
+      m.restore();
+      for (let i = -1; i <= 1; i += 2) {
+        m.save();
+          m.translate(i * lever.wid, -lever.min, 0);
+          m.rotateX(Math.PI * .5 - lever.theta);
+          m.translate(0, 0, -(lever.max + lever.min) * .5);
+          m.scale(.01, .01, (lever.max - lever.min) * .5);
+          drawShape(CG.tube, [1,1,1]);
+        m.restore();
+      }
+    m.restore();
   };
-
-
-  if (input.LC) {
-    if (input.RC.press()) {
-      angle_w[0] += 0.1;
-    }
-  }
-
-  if (input.RC && input.LC.press()) {
-    angle_w[1] += 0.1;
-  }
 
   let dt = state.time - last_time;
   // console.log(dt);
@@ -923,7 +1029,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       angle[0] += angle_w[0] * dt;
       angle[1] += angle_w[1] * dt;
       m.translate(-ship_loc[0], -ship_loc[1], -ship_loc[2]);
-      m.rotateY(-angle[1]);
+      m.rotateX(-angle[1]);
       m.rotateZ(-angle[0]);
       drawMilkyWay();
       drawSolarSystem();
@@ -940,15 +1046,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   }
 
   last_time = state.time;
-
-
-  // MODEL TEST
-  //m.save();
-  //  m.translate(0, 0, -40);
-  //  m.rotateX(state.time);
-  //  m.scale(.01);
-  //  drawShape(CG.f16, [1, 1, 1]);
-  //m.restore();
 
    /*-----------------------------------------------------------------
       Here is where we draw avatars and controllers.
