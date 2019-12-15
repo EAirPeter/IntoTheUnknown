@@ -848,6 +848,15 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
+  let drawShip = () => {
+    m.save();
+      m.translate(2, 0, -2);
+      m.rotateX(-Math.PI / 2);
+      m.scale(-4, -4, -4);
+      drawShape(CG.plane, [1, 1, 1]);
+    m.restore();
+  };
+
 
   if (input.LC) {
     if (input.RC.press()) {
@@ -873,6 +882,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       drawMilkyWay();
       drawSolarSystem();
     m.restore();
+    drawShip();
     miniature();
   } else {
     m.save();
