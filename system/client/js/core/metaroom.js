@@ -266,6 +266,12 @@ MR.playerType = MR.UserType.browser;
 
 MR.objs = [];
 
+MR.ship_loc = [0, 0, 0];
+MR.dir = [0, 0, 1];
+MR.angle_w = [0, 0]; // phi, theta
+MR.angle = [0, 0];
+MR.speed = 10;
+
 window.onbeforeunload = function() {
     websocket.onclose = function () {}; // disable onclose handler first
     websocket.close();

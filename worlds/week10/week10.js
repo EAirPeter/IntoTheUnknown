@@ -366,6 +366,26 @@ function sendSpawnMessage(object){
   MR.syncClient.send(response);
 }
 
+function sendMotionMessage(Location, Speed, Angle, W, Direction){
+  const response =
+    {
+      type: "motion",
+      // uid: -1,
+      // lockid: -1,
+      state: {
+        dir: Direction,
+        speed: Speed,
+        angle_w: W, // phi, theta
+        angle: Angle,
+        loc: Location,
+      }
+    };
+
+  MR.syncClient.send(response);
+}
+
+
+
 function onStartFrame(t, state) {
 
   /*-----------------------------------------------------------------

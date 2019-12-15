@@ -204,6 +204,24 @@ MR.syncClient.eventBus.subscribe("object", (json) => {
     }
 });
 
+MR.syncClient.eventBus.subscribe("motion", (json) => {
+    const success = json["success"];
+    if (success) {
+        console.log("ship moved: ", json);
+        // update update metadata for next frame's rendering
+        console.log(json);
+        MR.dir = json["state"]["dir"];
+        MR.speed = json["state"]["speed"];
+        MR.angle = json["state"]["angle"];
+        MR.angle_w = json["state"]["angle_w"];
+        MR.ship_loc = json["state"]["ship_loc"];
+      //current.orientation = MR.objs[json["state"]["orientation"]];
+      }
+      else{
+        console.log("failed object message", json);
+      }
+});
+
 // on success
 // const response = {
 //   "type": "calibrate",
