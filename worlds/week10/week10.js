@@ -375,15 +375,13 @@ function sendSpawnMessage(object){
   MR.syncClient.send(response);
 }
 
-// STICK TEST
+// pilot stick
 let stick = {
   lim: Math.PI * .25,
   len: .16,
-  pos: [.0, -.4, -.4],
+  pos: [.0, 1.4, -.4],
   active: false,
   Q: [0, 0, 1],
-  X: 0,
-  Y: 0,
 };
 
 function onStartFrame(t, state) {
@@ -513,7 +511,7 @@ function onStartFrame(t, state) {
     }
   }
 
-  // STICK TEST
+  // pilot stick
   let Cs = [];
   if (input.LC && input.LC.isGrasping())
     Cs.push(input.LC);
@@ -521,13 +519,13 @@ function onStartFrame(t, state) {
     Cs.push(input.RC);
   if (!Cs.length) {
     stick.active = false;
-    stick.X = 0;
-    stick.Y = 0;
+    angle_w[0] = 0;
+    angle_w[1] = 0;
     stick.Q = [0, 0, 0, 1];
   }
   for (let i = 0; i < Cs.length; ++i) {
     let C = Cs[i];
-    let P = C.position();
+    let P = CG.add(C.position(), [0, EYE_HEIGHT, 0]);
     let D = CG.subtract(P, stick.pos);
     let d = CG.norm(D);
     let p = Math.atan2(D[1], Math.hypot(D[2], D[0]));
@@ -542,10 +540,8 @@ function onStartFrame(t, state) {
       let s = Math.sin(p);
       D = [Math.sin(t) * c, s, Math.cos(t) * c];
       p = (Math.PI * .5 - p) / (Math.PI * .5 - stick.lim);
-      // -bank left, +bank right
-      stick.X = Math.sin(t) * p
-      // -pitch down, +pitch up
-      stick.Y = Math.cos(t) * p;
+      angle_w[0] = -Math.sin(t) * p;
+      angle_w[1] = Math.cos(t) * p;
       let A = CG.cross([0, 1, 0], D);
       t = Math.acos(CG.dot([0, 1, 0], D));
       c = Math.cos(t * .5);
@@ -773,7 +769,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   }
 
-  //m.translate(0, -EYE_HEIGHT, 0);
+  m.translate(0, -EYE_HEIGHT, 0);
 
    /*-----------------------------------------------------------------
 
@@ -914,22 +910,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   //create_scene();
   //miniature();
 
-  // STICK TEST
-  m.save();
-    m.translate(stick.pos[0], stick.pos[1], stick.pos[2]);
-    m.save();
-      m.translate(0, -.01, 0);
-      m.scale(.05, .01, .05);
-      drawShape(CG.cube, [1,1,1]);
-    m.restore();
-    m.save();
-      m.rotateQ(stick.Q);
-      m.rotateX(Math.PI * .5);
-      m.scale(.01, .01, stick.len * .5);
-      m.translate(0, 0, -1);
-      drawShape(CG.cylinder, [1,1,1]);
-  m.restore();
-
   // MODEL TEST
   //m.save();
   //  m.translate(0, 0, -40);
@@ -939,24 +919,31 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   //m.restore();
 
   let drawShip = () => {
+    // cockpit
     m.save();
       m.translate(2, 0, -2);
       m.rotateX(-Math.PI / 2);
       m.scale(-4, -4, -4);
       drawShape(CG.plane, [1, 1, 1]);
     m.restore();
+    // pilot stick
+    m.save();
+      m.translate(stick.pos[0], stick.pos[1], stick.pos[2]);
+      m.save();
+        m.translate(0, -.01, 0);
+        m.scale(.05, .01, .05);
+        drawShape(CG.cube, [1,1,1]);
+      m.restore();
+      m.save();
+        m.rotateQ(stick.Q);
+        m.rotateX(Math.PI * .5);
+        m.scale(.01, .01, stick.len * .5);
+        m.translate(0, 0, -1);
+        drawShape(CG.cylinder, [1,1,1]);
+      m.restore();
+    m.restore();
   };
 
-
-  if (input.LC) {
-    if (input.RC.press()) {
-      angle_w[0] += 0.1;
-    }
-  }
-
-  if (input.RC && input.LC.press()) {
-    angle_w[1] += 0.1;
-  }
 
   let dt = state.time - last_time;
   // console.log(dt);
@@ -967,7 +954,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       angle[0] += angle_w[0] * dt;
       angle[1] += angle_w[1] * dt;
       m.translate(-ship_loc[0], -ship_loc[1], -ship_loc[2]);
-      m.rotateY(-angle[1]);
+      m.rotateX(-angle[1]);
       m.rotateZ(-angle[0]);
       drawMilkyWay();
       drawSolarSystem();
