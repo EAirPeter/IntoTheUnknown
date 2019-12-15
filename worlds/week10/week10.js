@@ -927,7 +927,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   };
 
   let drawSolarSystem = () => {
-    // draw solar system
     m.save();
       drawStar(sunLoc, solarSystemData.star.sun);
       for (const p in solarSystemData.planet) {
