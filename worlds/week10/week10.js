@@ -21,7 +21,9 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 
 let ship_loc = [0, 0, 0];
 let dir = [0, 0, 1];
-let speed = 1;
+let angle_w = [0, 0]; // phi, theta
+let angle = [0, 0];
+let speed = 10;
 
 let last_time = 0;
 
@@ -796,27 +798,27 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.restore();
    };
 
-   let hold = false;
-   if (input.LC && input.LC.press()) {
-      if (speed < 0.5) {
-         speed += 0.01;
-      }
-   }
+  if (input.LC) {
+    if(input.RC.press()) {
+      angle_w[0] += 0.1;
+    }
+  }
 
-   // console.log(state.time);
-
-   if(input.RC && input.RC.press()) {
-      dir = CG.add(dir, [0.1, 0, 0]);
+   if(input.RC && input.LC.press()) {
+      angle_w[1] += 0.1;
    }
 
    let dt = state.time - last_time;
-   console.log(dt);
+   // console.log(dt);
 
    if(out_side == 0) {
       m.save();
       ship_loc = CG.add(ship_loc, CG.scale(dir, speed*dt));
+      angle[0] += angle_w[0]*dt;
+      angle[1] += angle_w[1]*dt;
       m.translate(-ship_loc[0], -ship_loc[1], -ship_loc[2]);
-      
+      m.rotateY(-angle[1]);
+      m.rotateZ(-angle[0]);
       create_scene();
       miniature();
       m.restore();
