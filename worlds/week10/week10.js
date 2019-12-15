@@ -175,8 +175,10 @@ async function setup(state) {
   }
 
   // MODEL TEST
-  //const f16 = await axios.get("objs/spaceship01.json");
-  //CG.f16 = new CG.Model(f16.data);
+  const asteroid2 = await axios.get("objs/asteroid2.json");
+  CG.asteroid2 = new CG.Model(asteroid2.data);
+  const asteroid3 = await axios.get("objs/asteroid3.json");
+  CG.asteroid3 = new CG.Model(asteroid3.data);
 
   const images = await imgutil.loadImagesPromise(paths);
 
