@@ -203,6 +203,12 @@ async function setup(state) {
     }
   }
 
+  // MODEL TEST
+  const asteroid2 = await axios.get("objs/asteroid2.json");
+  CG.asteroid2 = new CG.Model(asteroid2.data);
+  const asteroid3 = await axios.get("objs/asteroid3.json");
+  CG.asteroid3 = new CG.Model(asteroid3.data);
+
   const images = await imgutil.loadImagesPromise(paths);
 
   let libSources = await MREditor.loadAndRegisterShaderLibrariesForLiveEditing(gl, "libs", [
@@ -281,10 +287,10 @@ async function setup(state) {
 
   state.cursor = ScreenCursor.trackCursor(MR.getCanvas());
 
-  CG.ibo = gl.createBuffer();
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CG.ibo);
-  CG.vbo = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, CG.vbo);
+  //CG.ibo = gl.createBuffer();
+  //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CG.ibo);
+  //CG.vbo = gl.createBuffer();
+  //gl.bindBuffer(gl.ARRAY_BUFFER, CG.vbo);
 
   CG.aPos = gl.getAttribLocation(state.program, 'aPos');
   CG.aNor = gl.getAttribLocation(state.program, 'aNor');
@@ -896,6 +902,14 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
   last_time = state.time;
 
+
+  // MODEL TEST
+  //m.save();
+  //  m.translate(0, 0, -40);
+  //  m.rotateX(state.time);
+  //  m.scale(.01);
+  //  drawShape(CG.f16, [1, 1, 1]);
+  //m.restore();
 
    /*-----------------------------------------------------------------
       Here is where we draw avatars and controllers.
