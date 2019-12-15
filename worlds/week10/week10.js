@@ -19,6 +19,17 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 
 ////////////////////////////// SCENE SPECIFIC CODE
 
+let ship_loc = [0, 0, 0];
+let dir = [0, 0, 1];
+let angle_w = [0, 0]; // phi, theta
+let angle = [0, 0];
+let speed = 10;
+
+let last_time = 0;
+
+let out_side = 0; // -1 means left; 1 means right; 0 means inside.
+let arm_loc = [out_side*3, 0, 0];
+
 let texs = {
   white:        {img: "white.png"},
   normal:       {img: "normal.png"},
@@ -524,6 +535,8 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   gl.uniformMatrix4fv(state.uProjLoc, false, new Float32Array(projMat));
 
   const input  = state.input;
+  let LC = input.LC;
+  let RC = input.RC;
 
    /*-----------------------------------------------------------------
 
@@ -835,8 +848,43 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   };
 
   drawMilkyWay();
-  create_scene(false);
-  miniature();
+
+
+  if (input.LC) {
+    if(input.RC.press()) {
+      angle_w[0] += 0.1;
+    }
+  }
+
+   if(input.RC && input.LC.press()) {
+      angle_w[1] += 0.1;
+   }
+
+   let dt = state.time - last_time;
+   // console.log(dt);
+
+   if(out_side == 0) {
+      m.save();
+      ship_loc = CG.add(ship_loc, CG.scale(dir, speed*dt));
+      angle[0] += angle_w[0]*dt;
+      angle[1] += angle_w[1]*dt;
+      m.translate(-ship_loc[0], -ship_loc[1], -ship_loc[2]);
+      m.rotateY(-angle[1]);
+      m.rotateZ(-angle[0]);
+      create_scene(false);
+      miniature();
+      m.restore();
+   }
+   else {
+      m.save();
+      arm_loc = CG.add(ship_loc, arm_loc);
+      m.translate(-arm_loc[0], -arm_loc[1], -arm_loc[2]);
+      create_scene(false);
+      m.restore();
+   }
+
+   last_time = state.time;
+
 
    /*-----------------------------------------------------------------
       Here is where we draw avatars and controllers.
