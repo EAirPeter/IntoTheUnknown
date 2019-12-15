@@ -64,17 +64,19 @@ to see what the options are.
 
 function HeadsetHandler(headset) {
   this.orientation = () => headset.pose.orientation;
-  this.position   = () => headset.pose.position;
+  this.position    = () => headset.pose.position;
 }
 
 function ControllerHandler(controller) {
-  this.isDown    = () => controller.buttons[1].pressed;
-  this.onEndFrame  = () => wasDown = this.isDown();
+  this.isDown      = () => controller.buttons[1].pressed;
+  this.isGrasping  = () => controller.buttons[2].pressed;
+  this.onEndFrame  = () => { wasDown = this.isDown(); wasGrasping = this.isGrasping(); }
   this.orientation = () => controller.pose.orientation;
-  this.position   = () => controller.pose.position;
-  this.press     = () => !wasDown && this.isDown();
-  this.release    = () => wasDown && !this.isDown();
-  this.tip      = () => {
+  this.position    = () => controller.pose.position;
+  this.press       = () => !wasDown && this.isDown();
+  this.release     = () => wasDown && !this.isDown();
+  this.grasp       = () => !wasGrasping && this.isGrasping();
+  this.tip         = () => {
     let P = this.position();        // THIS CODE JUST MOVES
     m.identity();                   // THE "HOT SPOT" OF THE
     m.translate(P[0],P[1],P[2]);    // CONTROLLER TOWARD ITS
@@ -93,6 +95,7 @@ function ControllerHandler(controller) {
     return [v[12],v[13],v[14]];
   };
   let wasDown = false;
+  let wasGrasping = false;
 }
 
 // (New Info): constants can be reloaded without worry
@@ -343,6 +346,17 @@ function sendSpawnMessage(object){
   MR.syncClient.send(response);
 }
 
+// STICK TEST
+let stick = {
+  lim: Math.PI * .25,
+  len: .16,
+  pos: [.0, -.4, -.4],
+  active: false,
+  Q: [0, 0, 1],
+  X: 0,
+  Y: 0,
+};
+
 function onStartFrame(t, state) {
 
   /*-----------------------------------------------------------------
@@ -467,6 +481,47 @@ function onStartFrame(t, state) {
         m.restore();
         state.calibrationCount = 0;
       }
+    }
+  }
+
+  // STICK TEST
+  let Cs = [];
+  if (input.LC && input.LC.isGrasping())
+    Cs.push(input.LC);
+  if (input.RC && input.RC.isGrasping())
+    Cs.push(input.RC);
+  if (!Cs.length) {
+    stick.active = false;
+    stick.X = 0;
+    stick.Y = 0;
+    stick.Q = [0, 0, 0, 1];
+  }
+  for (let i = 0; i < Cs.length; ++i) {
+    let C = Cs[i];
+    let P = C.position();
+    let D = CG.subtract(P, stick.pos);
+    let d = CG.norm(D);
+    let p = Math.atan2(D[1], Math.hypot(D[2], D[0]));
+    let t = Math.atan2(D[0], D[2]);
+    let update = false;
+    if (C.grasp() && d < stick.len && p > stick.lim)
+      stick.active = true;
+    else if (stick.active)
+      p = Math.max(p, stick.lim);
+    if (stick.active) {
+      let c = Math.cos(p);
+      let s = Math.sin(p);
+      D = [Math.sin(t) * c, s, Math.cos(t) * c];
+      p = (Math.PI * .5 - p) / (Math.PI * .5 - stick.lim);
+      // -bank left, +bank right
+      stick.X = Math.sin(t) * p
+      // -pitch down, +pitch up
+      stick.Y = Math.cos(t) * p;
+      let A = CG.cross([0, 1, 0], D);
+      t = Math.acos(CG.dot([0, 1, 0], D));
+      c = Math.cos(t * .5);
+      s = Math.sin(t * .5);
+      stick.Q = [A[0] * s, A[1] * s, A[2] * s, c];
     }
   }
 
@@ -617,6 +672,8 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.multiply(state.avatarMatrixForward);
       m.translate(P[0],P[1],P[2]);
       m.rotateQ(C.orientation());
+      //m.scale(.001, .001, .04);
+      //drawShape(CG.cylinder, [1,1,1]);
       m.translate(0,.02,-.005);
       m.rotateX(.75);
       m.save();
@@ -709,7 +766,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   }
 
-  m.translate(0, -EYE_HEIGHT, 0);
+  //m.translate(0, -EYE_HEIGHT, 0);
 
    /*-----------------------------------------------------------------
 
@@ -785,8 +842,24 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
-  create_scene();
-  miniature();
+  //create_scene();
+  //miniature();
+
+  // STICK TEST
+  m.save();
+    m.translate(stick.pos[0], stick.pos[1], stick.pos[2]);
+    m.save();
+      m.translate(0, -.01, 0);
+      m.scale(.05, .01, .05);
+      drawShape(CG.cube, [1,1,1]);
+    m.restore();
+    m.save();
+      m.rotateQ(stick.Q);
+      m.rotateX(Math.PI * .5);
+      m.scale(.01, .01, stick.len * .5);
+      m.translate(0, 0, -1);
+      drawShape(CG.cylinder, [1,1,1]);
+  m.restore();
 
   // MODEL TEST
   //m.save();
