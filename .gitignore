@@ -104,3 +104,4 @@ tags
 [._]*.un~
 
 *.DS_Store
+.idea/
