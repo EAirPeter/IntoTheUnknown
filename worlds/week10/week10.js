@@ -396,7 +396,7 @@ let lever = {
   pos: [.2, 1.2, -.2],
   active: null,
   theta: 0,
-}
+};
 
 function onStartFrame(t, state) {
 
