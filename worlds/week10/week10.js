@@ -20,10 +20,10 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 ////////////////////////////// SCENE SPECIFIC CODE
 
 let ship_loc = [0, 0, 0];
-let dir = [0, 0, 1];
+let dir = [0, 0, -1];
 let angle_w = [0, 0]; // phi, theta
 let angle = [0, 0];
-let speed = 10;
+let speed = 0;
 
 let last_time = 0;
 
@@ -373,10 +373,21 @@ let stick = {
   lim: Math.PI * .25,
   min: .04,
   max: .2,
-  pos: [.0, 1.4, -.4],
-  active: false,
-  Q: [0, 0, 1],
+  pos: [0, 1.4, -.4],
+  active: null,
+  Q: [0, 0, 0, 1],
 };
+
+// thrust lever
+let lever = {
+  lim: Math.PI * .25,
+  wid: .06,
+  min: .04,
+  max: .2,
+  pos: [.2, 1.2, -.2],
+  active: null,
+  theta: 0,
+}
 
 function onStartFrame(t, state) {
 
@@ -505,30 +516,31 @@ function onStartFrame(t, state) {
     }
   }
 
-  // pilot stick
   let Cs = [];
   if (input.LC && input.LC.isGrasping())
     Cs.push(input.LC);
   if (input.RC && input.RC.isGrasping())
     Cs.push(input.RC);
-  if (!Cs.length) {
-    stick.active = false;
+  // pilot stick
+  if (stick.active != null && !stick.active.isGrasping()) {
+    stick.active = null;
     angle_w[0] = 0;
     angle_w[1] = 0;
     stick.Q = [0, 0, 0, 1];
   }
   for (let i = 0; i < Cs.length; ++i) {
     let C = Cs[i];
+    if (stick.active != null && stick.active != C)
+      continue;
     let D = CG.add(CG.subtract(C.position(), stick.pos), [0, EYE_HEIGHT + stick.min, 0]);
     let d = CG.norm(D);
     let p = Math.atan2(D[1], Math.hypot(D[2], D[0]));
     let t = Math.atan2(D[0], D[2]);
     let update = false;
-    if (C.grasp() && stick.min < d && d < stick.max && p > stick.lim)
-      stick.active = true;
-    else if (stick.active)
-      p = Math.max(p, stick.lim);
-    if (stick.active) {
+    if (C.grasp() && stick.min < d && d < stick.max && p >= stick.lim)
+      stick.active = C;
+    if (stick.active == C) {
+      p = CG.clamp(p, stick.lim, Math.PI * .5);
       let c = Math.cos(p);
       let s = Math.sin(p);
       D = [Math.sin(t) * c, s, Math.cos(t) * c];
@@ -540,6 +552,23 @@ function onStartFrame(t, state) {
       c = Math.cos(t * .5);
       s = Math.sin(t * .5);
       stick.Q = [A[0] * s, A[1] * s, A[2] * s, c];
+    }
+  }
+  // thrust lever
+  if (lever.active != null && !lever.active.isGrasping())
+    lever.active = null;
+  for (let i =  0; i < Cs.length; ++i) {
+    let C = Cs[i];
+    if (lever.active != null && lever.active != C)
+      continue;
+    let D = CG.add(CG.subtract(C.position(), lever.pos), [0, EYE_HEIGHT + lever.min, 0]);
+    let d = Math.hypot(D[1], D[2]);
+    let t = Math.atan2(-D[2], D[1]);
+    if (C.grasp() && lever.min < d && d < lever.max + .02 && Math.abs(D[0]) < lever.wid && Math.abs(t) <= lever.lim)
+      lever.active = C;
+    if (lever.active == C) {
+      lever.theta = CG.clamp(t, -lever.lim, lever.lim);
+      speed = 1000 * lever.theta / lever.lim;
     }
   }
 
@@ -935,24 +964,34 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         m.scale(.01, .01, (stick.max - stick.min) * .5);
         drawShape(CG.cylinder, [1,1,1]);
       m.restore();
-      // LEVER TEST
-      //m.save();
-      //  m.translate(lever.pos[0], lever.pos[1], lever.pos[2]);
-      //  m.save();
-      //    m.translate(0, -.01, 0);
-      //    m.scale(.05, .01, .05);;
-      //    drawShape(CG.cube, [1,1,1]);
-      //  m.restore();
-      //  for (let i = -1; i <= 1; i += 2) {
-      //    m.save();
-      //      m.translate(i * lever.wid, -lever.min, 0);
-
-      //    m.restore();
-      //  }
-      //m.restore();
+    m.restore();
+    // thrust lever
+    m.save();
+      m.translate(lever.pos[0], lever.pos[1], lever.pos[2]);
+      m.save();
+        m.translate(0, -.01, 0);
+        m.scale(lever.wid + .02, .01, .05);;
+        drawShape(CG.cube, [1,1,1]);
+      m.restore();
+      m.save();
+        m.translate(0, -lever.min, 0);
+        m.rotateX(-lever.theta);
+        m.translate(0, lever.max, 0);
+        m.rotateY(Math.PI * .5);
+        m.scale(.016, .016, lever.wid + .02);
+        drawShape(CG.cylinder, [1,1,1]);
+      m.restore();
+      for (let i = -1; i <= 1; i += 2) {
+        m.save();
+          m.translate(i * lever.wid, -lever.min, 0);
+          m.rotateX(Math.PI * .5 - lever.theta);
+          m.translate(0, 0, -(lever.max + lever.min) * .5);
+          m.scale(.01, .01, (lever.max - lever.min) * .5);
+          drawShape(CG.tube, [1,1,1]);
+        m.restore();
+      }
     m.restore();
   };
-
 
   let dt = state.time - last_time;
   // console.log(dt);
