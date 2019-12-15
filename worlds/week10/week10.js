@@ -371,7 +371,8 @@ function sendSpawnMessage(object){
 // pilot stick
 let stick = {
   lim: Math.PI * .25,
-  len: .16,
+  min: .04,
+  max: .2,
   pos: [.0, 1.4, -.4],
   active: false,
   Q: [0, 0, 1],
@@ -518,13 +519,12 @@ function onStartFrame(t, state) {
   }
   for (let i = 0; i < Cs.length; ++i) {
     let C = Cs[i];
-    let P = CG.add(C.position(), [0, EYE_HEIGHT, 0]);
-    let D = CG.subtract(P, stick.pos);
+    let D = CG.add(CG.subtract(C.position(), stick.pos), [0, EYE_HEIGHT + stick.min, 0]);
     let d = CG.norm(D);
     let p = Math.atan2(D[1], Math.hypot(D[2], D[0]));
     let t = Math.atan2(D[0], D[2]);
     let update = false;
-    if (C.grasp() && d < stick.len && p > stick.lim)
+    if (C.grasp() && stick.min < d && d < stick.max && p > stick.lim)
       stick.active = true;
     else if (stick.active)
       p = Math.max(p, stick.lim);
@@ -928,12 +928,28 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         drawShape(CG.cube, [1,1,1]);
       m.restore();
       m.save();
+        m.translate(0, -stick.min, 0);
         m.rotateQ(stick.Q);
         m.rotateX(Math.PI * .5);
-        m.scale(.01, .01, stick.len * .5);
-        m.translate(0, 0, -1);
+        m.translate(0, 0, -(stick.max + stick.min) * .5);
+        m.scale(.01, .01, (stick.max - stick.min) * .5);
         drawShape(CG.cylinder, [1,1,1]);
       m.restore();
+      // LEVER TEST
+      //m.save();
+      //  m.translate(lever.pos[0], lever.pos[1], lever.pos[2]);
+      //  m.save();
+      //    m.translate(0, -.01, 0);
+      //    m.scale(.05, .01, .05);;
+      //    drawShape(CG.cube, [1,1,1]);
+      //  m.restore();
+      //  for (let i = -1; i <= 1; i += 2) {
+      //    m.save();
+      //      m.translate(i * lever.wid, -lever.min, 0);
+
+      //    m.restore();
+      //  }
+      //m.restore();
     m.restore();
   };
 
