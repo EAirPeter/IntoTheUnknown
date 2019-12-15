@@ -911,7 +911,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       drawSolarSystem();
     m.restore();
   }
-
+  sendMotionMessage();
   last_time = state.time;
 
 
