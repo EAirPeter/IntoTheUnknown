@@ -49,6 +49,7 @@ let texs = {
   uranus:       {img: "7uranus.jpg"},
   neptune:      {img: "8neptune.jpg"},
   milky_way:    {img: "milky_way.jpg"},
+  asteroid:     {dir: "asteroid"},
 };
 
 let getMats = () => { return {
@@ -66,6 +67,7 @@ let getMats = () => { return {
   uranus:     [texs.uranus.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   neptune:    [texs.neptune.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   milky_way:  [texs.milky_way.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  asteroid:   texs.asteroid.id,
 }};
 
 let noise = new ImprovedNoise();
