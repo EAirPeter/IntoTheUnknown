@@ -379,7 +379,7 @@ let ship = {
   bank: 0,
   dPitch: 0,
   dBank: 0,
-}
+};
 
 // pilot stick
 let stick = {
@@ -581,7 +581,7 @@ function onStartFrame(t, state) {
       lever.active = C;
     if (lever.active == C) {
       lever.theta = CG.clamp(t, -lever.lim, lever.lim);
-      ship.speed = 1000 * lever.theta / lever.lim;
+      ship.speed = 100 * lever.theta / lever.lim;
     }
   }
 
@@ -965,9 +965,23 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   };
 
   let drawAsteroidBelt = () => {
-    drawAsteroid(1, [-10, 2, -8]);
-    drawAsteroid(2, [0, 2, -8]);
-    drawAsteroid(3, [10, 2, -8]);
+    // drawAsteroid(1, [-10, 2, -8]);
+    // drawAsteroid(2, [0, 2, -8]);
+    // drawAsteroid(3, [10, 2, -8]);
+    let i = 1;
+    let interval = 100;
+    let r = 3;
+    let xCenter = Math.floor(ship.loc[0] / interval) * interval - interval / 2;
+    let yCenter = Math.floor(ship.loc[1] / interval) * interval - interval / 2;
+    let zCenter = Math.floor(ship.loc[2] / interval) * interval - interval / 2;
+    for (let x = xCenter - r * interval; x <= xCenter + r * interval; x += interval) {
+      for (let y = yCenter - r * interval; y <= yCenter + r * interval; y += interval) {
+        for (let z = zCenter - interval; z <= zCenter + 2 * r * interval; z += interval) {
+          drawAsteroid(1, [x, y, z]);
+          if (i > 3) i = 1;
+        }
+      }
+    }
   };
 
   let drawShip = () => {
