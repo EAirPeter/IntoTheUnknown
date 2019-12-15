@@ -209,17 +209,16 @@ MR.syncClient.eventBus.subscribe("motion", (json) => {
     if (success) {
         console.log("ship moved: ", json);
         // update update metadata for next frame's rendering
-        console.log(json);
+        // console.log(json);
         MR.dir = json["state"]["dir"];
         MR.speed = json["state"]["speed"];
         MR.angle = json["state"]["angle"];
         MR.angle_w = json["state"]["angle_w"];
         MR.ship_loc = json["state"]["ship_loc"];
-      //current.orientation = MR.objs[json["state"]["orientation"]];
-      }
-      else{
+    }
+    else{
         console.log("failed object message", json);
-      }
+    }
 });
 
 // on success

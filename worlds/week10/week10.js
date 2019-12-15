@@ -377,7 +377,7 @@ function sendMotionMessage(Location, Speed, Angle, W, Direction){
         speed: Speed,
         angle_w: W, // phi, theta
         angle: Angle,
-        loc: Location,
+        ship_loc: Location,
       }
     };
 
@@ -890,8 +890,9 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
   let dt = state.time - last_time;
   // console.log(dt);
-  sendMotionMessage(ship_loc, speed, angle, angle_w, dir);
-
+  if (MR.playerid == 0) { 
+    sendMotionMessage(ship_loc, speed, angle, angle_w, dir);
+  }
   ship_loc = MR.ship_loc;
   speed = MR.speed;
   angle = MR.angle;
@@ -918,7 +919,16 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       drawSolarSystem();
     m.restore();
   }
-  sendMotionMessage(ship_loc, speed, angle, angle_w, dir);
+  if (MR.playerid == 0) {
+    sendMotionMessage(ship_loc, speed, angle, angle_w, dir);
+  }
+  ship_loc = MR.ship_loc;
+  speed = MR.speed;
+  angle = MR.angle;
+  angle_w = MR.angle_w;
+  dir = MR.dir;
+
+  
   last_time = state.time;
 
 
