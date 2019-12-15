@@ -478,7 +478,7 @@ window.VRCanvasWrangler = (function() {
                         // appropriate for your scene so the projection matrices WebVR produces
                         // have a well-scaled depth buffer.
                         vrDisplay.depthNear = 0.1;
-                        vrDisplay.depthFar = 1024.0;
+                        vrDisplay.depthFar = 16384.0;
 
                         // Generally, you want to wait until VR support is confirmed and you know the
                         // user has a VRDisplay capable of presenting connected before adding UI that

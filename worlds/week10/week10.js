@@ -19,26 +19,55 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 
 ////////////////////////////// SCENE SPECIFIC CODE
 
+let ship_loc = [0, 0, 0];
+let dir = [0, 0, 1];
+let angle_w = [0, 0]; // phi, theta
+let angle = [0, 0];
+let speed = 10;
+
+let last_time = 0;
+
+let out_side = 0; // -1 means left; 1 means right; 0 means inside.
+let arm_loc = [out_side*3, 0, 0];
+
 let texs = {
-  white:    {img: "white.png"},
-  normal:   {img: "normal.png"},
-  wood:     {img: "wood.png"},
+  white:        {img: "white.png"},
+  normal:       {img: "normal.png"},
+  wood:         {img: "wood.png"},
   // tiles:    {img: "tiles"},
-  earth:    {img: "earth.jpg"},
-  one:      {img: "1.jpg"},
-  nb:       {img: "noisy_bump.jpg"},
-  stones:   {img: "stones.jpg"},
-  brick:    {img: "brick.png"},
-  solar:    {img: "solar.jpg"}
+  nb:           {img: "noisy_bump.jpg"},
+  stones:       {img: "stones.jpg"},
+  brick:        {img: "brick.png"},
+  sun:          {img: "0sun.jpg"},
+  mercury:      {img: "1mercury.jpg"},
+  venus:        {img: "2venus.jpg"},
+  earth:        {img: "3earth.jpg"},
+  mars:         {img: "4mars.jpg"},
+  jupiter:      {img: "5jupiter.jpg"},
+  saturn:       {img: "6saturn.jpg"},
+  saturn_ring:  {img: "6saturn_ring.png"},
+  uranus:       {img: "7uranus.jpg"},
+  neptune:      {img: "8neptune.jpg"},
+  milky_way:    {img: "milky_way.jpg"},
+  asteroid:     {dir: "asteroid"},
 };
 
 let getMats = () => { return {
-  trivial:  [texs.white.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
-  solar:    [texs.solar.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
-  wood:     [texs.wood .id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  trivial:    [texs.white.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  wood:       [texs.wood .id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   // tiles:    [texs.tiles.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
-  earth:    [texs.earth.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
-  one:      [texs.one  .id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  sun:        [texs.sun.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  mercury:    [texs.mercury.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  venus:      [texs.venus.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  earth:      [texs.earth.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  mars:       [texs.mars.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  jupiter:    [texs.jupiter.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  saturn:     [texs.saturn.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  saturn_ring:[texs.saturn_ring.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  uranus:     [texs.uranus.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  neptune:    [texs.neptune.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  milky_way:  [texs.milky_way.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  asteroid:   texs.asteroid.id,
 }};
 
 let noise = new ImprovedNoise();
@@ -567,6 +596,8 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   gl.uniformMatrix4fv(state.uProjLoc, false, new Float32Array(projMat));
 
   const input  = state.input;
+  let LC = input.LC;
+  let RC = input.RC;
 
    /*-----------------------------------------------------------------
 
@@ -580,12 +611,12 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
    -----------------------------------------------------------------*/
 
-  let drawShape = (shape, color, mat, texScale) => {
+  let drawShape = (shape, color, mat, texScale, spec) => {
     if (!mat)
       mat = state.mats.trivial;
     gl.uniform3fv(state.uAmbiLoc, CG.scale(color, .1));
     gl.uniform3fv(state.uDiffLoc, CG.scale(color, .5));
-    gl.uniform4fv(state.uSpecLoc, [.4, .4, .4, 30]);
+    gl.uniform4fv(state.uSpecLoc, spec ? spec : [0, 0, 0, 1]);
     gl.uniformMatrix4fv(state.uModelLoc, false, m.value());
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, mat[0]);
@@ -604,30 +635,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       gl.uniform1f(state.uToonLoc, 0);
     }
     shape.draw();
-  };
-
-   /*-----------------------------------------------------------------
-
-   drawTable() just happens to model the physical size and shape of the
-   tables in my lab (measured in meters). If you want to model physical
-   furniture, you will probably want to do something different.
-
-   -----------------------------------------------------------------*/
-
-  let drawStar = (location, R, mat) => {
-    m.save();
-      m.translate(location[0], location[1], location[2]);
-      m.scale(R, R, R);
-      drawShape(CG.sphere, [1,1,1], mat);
-    m.restore();
-  };
-
-  let drawPlanet = (location, R, r, T, mat, phi = 0) => {
-    m.save();
-      m.translate(location[0] + r * Math.cos(Math.PI * 2 / T * state.time + phi), location[1], location[2] + r * Math.sin(Math.PI * 2 / T * state.time + phi));
-      m.scale(R, R, R);
-      drawShape(CG.sphere, [1, 1, 1], mat);
-    m.restore();
   };
 
    /*-----------------------------------------------------------------
@@ -776,69 +783,131 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
    -----------------------------------------------------------------*/
 
-  let create_scene = () => {
-    // draw stars and planets
+  let drawMilkyWay = () => {
     m.save();
-      let loc = [-200, 200, -600];
-      m.save();
-        drawStar(loc, 150, state.mats.solar);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 50, 200, 10, state.mats.one);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 20, 200, 30, state.mats.one, 20);
-      m.restore();
-    m.restore();
-
-    m.save();
-      loc = [-500, -200, -600];
-      // m.rotateZ(45);
-      m.save();
-        drawStar(loc, 150, state.mats.earth);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 50, 300, 10, state.mats.one);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 40, 250, 15, state.mats.solar, 30);
-      m.restore();
-    m.restore();
-
-    m.save();
-      loc = [400, 250, -400];
-      // m.rotateZ(45);
-      m.save();
-        drawStar(loc, 150, state.mats.one);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 50, 200, 10, state.mats.earth);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 40, 300, 15, state.mats.solar, 30);
-      m.restore();
-    m.restore();
-
-    m.save();
-      loc = [400, -250, -500];
-      // m.rotateZ(45);
-      m.save();
-        drawStar(loc, 150);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 40, 200, 10, state.mats.one);
-      m.restore();
-      m.save();
-        drawPlanet(loc, 30, 250, 15, state.mats.wood, 30);
-      m.restore();
+    let scale = -16000;
+    m.translate(0, EYE_HEIGHT * 0.8, -1);
+    m.rotateY(Math.PI/2);
+    m.rotateX(Math.PI/2);
+    m.scale(scale, scale, scale);
+    drawShape(CG.sphere, [1,1,1], state.mats.milky_way);
     m.restore();
   };
-  // miniature of background
+
+  let solarSystemData = {
+    star: {
+      sun: {
+        radius: 500,
+        mat: state.mats.sun,
+      }
+    },
+    planet: {
+      mercury: {
+        rotateZ: -0.2,
+        radius: 140,
+        distance: 1500,
+        mat: state.mats.mercury,
+        T: 1000,
+        phi: 10,
+      },
+      venus: {
+        rotateZ: -0.11,
+        radius: 160,
+        distance: 3000,
+        mat: state.mats.venus,
+        T: 1200,
+        phi: 200,
+      },
+      earth: {
+        rotateZ: 0,
+        radius: 180,
+        distance: 4500,
+        mat: state.mats.earth,
+        T: 1500,
+        phi: 30,
+      },
+      mars: {
+        rotateZ: -0.05,
+        radius: 140,
+        distance: 6000,
+        mat: state.mats.mars,
+        T: 1800,
+        phi: -300,
+      },
+      jupiter: {
+        rotateZ: 0,
+        radius: 300,
+        distance: 8000,
+        mat: state.mats.jupiter,
+        T: 2300,
+        phi: 50,
+      },
+      saturn: {
+        rotateZ: 0.1,
+        radius: 260,
+        distance: 9000,
+        mat: state.mats.saturn,
+        T: 2700,
+        phi: 60,
+      },
+      uranus: {
+        rotateZ: 0.04,
+        radius: 200,
+        distance: 10000,
+        mat: state.mats.uranus,
+        T: 3100,
+        phi: 70,
+      },
+      neptune: {
+        rotateZ: 0,
+        radius: 200,
+        distance: 11000,
+        mat: state.mats.neptune,
+        T: 3700,
+        phi: 80,
+      }
+    }
+  };
+
+  let drawStar = (location, star) => {
+    m.save();
+      m.translate(location[0], location[1], location[2]);
+      m.scale(star.radius, star.radius, star.radius);
+      m.rotateX(Math.PI / 2);
+      drawShape(CG.sphere, [1,1,1], star.mat);
+    m.restore();
+  };
+
+  let drawPlanet = (location, planet) => {
+    m.save();
+      m.rotateZ(planet.rotateZ);
+      m.translate(location[0] + planet.distance * Math.cos(Math.PI * 2 / planet.T * state.time + planet.phi),
+          location[1], location[2] + planet.distance * Math.sin(Math.PI * 2 / planet.T * state.time + planet.phi));
+      m.scale(planet.radius, planet.radius, planet.radius);
+      m.rotateX(Math.PI / 2);
+      drawShape(CG.sphere, [1, 1, 1], planet.mat);
+    m.restore();
+  };
+
+  let drawSolarSystem = () => {
+    // draw solar system
+    m.save();
+      let sunLoc = [-1000, 0, -4000];
+      drawStar(sunLoc, solarSystemData.star.sun);
+      for (const p in solarSystemData.planet) {
+        if (solarSystemData.planet.hasOwnProperty(p)) {
+          drawPlanet(sunLoc, solarSystemData.planet[p]);
+        }
+      }
+    m.restore();
+  };
+  // miniature of solar system
   let miniature = () => {
     m.save();
-      m.translate(0, EYE_HEIGHT * 0.8, 0);
-      m.scale(0.0002, 0.0002, 0.0002);
-      create_scene();
+      let miniatureScale = 0.00004;
+      m.translate(0, EYE_HEIGHT * 0.8, -0.3);
+      m.scale(miniatureScale, miniatureScale, miniatureScale);
+      drawSolarSystem();
     m.restore();
   };
 
@@ -868,6 +937,52 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   //  m.scale(.01);
   //  drawShape(CG.f16, [1, 1, 1]);
   //m.restore();
+
+  let drawShip = () => {
+    m.save();
+      m.translate(2, 0, -2);
+      m.rotateX(-Math.PI / 2);
+      m.scale(-4, -4, -4);
+      drawShape(CG.plane, [1, 1, 1]);
+    m.restore();
+  };
+
+
+  if (input.LC) {
+    if (input.RC.press()) {
+      angle_w[0] += 0.1;
+    }
+  }
+
+  if (input.RC && input.LC.press()) {
+    angle_w[1] += 0.1;
+  }
+
+  let dt = state.time - last_time;
+  // console.log(dt);
+
+  if (out_side === 0) {
+    m.save();
+      ship_loc = CG.add(ship_loc, CG.scale(dir, speed * dt));
+      angle[0] += angle_w[0] * dt;
+      angle[1] += angle_w[1] * dt;
+      m.translate(-ship_loc[0], -ship_loc[1], -ship_loc[2]);
+      m.rotateY(-angle[1]);
+      m.rotateZ(-angle[0]);
+      drawMilkyWay();
+      drawSolarSystem();
+    m.restore();
+    drawShip();
+    miniature();
+  } else {
+    m.save();
+      arm_loc = CG.add(ship_loc, arm_loc);
+      m.translate(-arm_loc[0], -arm_loc[1], -arm_loc[2]);
+      drawSolarSystem();
+    m.restore();
+  }
+
+  last_time = state.time;
 
    /*-----------------------------------------------------------------
       Here is where we draw avatars and controllers.
@@ -936,11 +1051,11 @@ function onEndFrame(t, state) {
     // i.e. a speaker, or an drum in the room.
     // You must provide the path given, when you construct the audio context.
 
-    if (input.LC && input.LC.press())
-      this.audioContext1.playFileAt('assets/audio/blop.wav', input.LC.position());
+    // if (input.LC && input.LC.press())
+    //   this.audioContext1.playFileAt('assets/audio/blop.wav', input.LC.position());
 
-    if (input.RC && input.RC.press())
-      this.audioContext2.playFileAt('assets/audio/peacock.wav', input.RC.position());
+    // if (input.RC && input.RC.press())
+    //   this.audioContext2.playFileAt('assets/audio/peacock.wav', input.RC.position());
   }
 
   if (input.LC) input.LC.onEndFrame();
