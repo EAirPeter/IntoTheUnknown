@@ -19,14 +19,7 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 
 ////////////////////////////// SCENE SPECIFIC CODE
 
-let ship_loc = [0, 0, 0];
-let dir = [0, 0, -1];
-let angle_w = [0, 0]; // phi, theta
-let angle = [0, 0];
-let speed = 0;
-
 let last_time = 0;
-
 let out_side = 0; // -1 means left; 1 means right; 0 means inside.
 let arm_loc = [out_side*3, 0, 0];
 
@@ -377,6 +370,17 @@ function sendSpawnMessage(object){
   MR.syncClient.send(response);
 }
 
+// spaceship
+let ship = {
+  loc: [0, 0, 0],
+  dir: [0, 0, -1],
+  speed: 0,
+  pitch: 0,
+  bank: 0,
+  dPitch: 0,
+  dBank: 0,
+}
+
 // pilot stick
 let stick = {
   lim: Math.PI * .25,
@@ -533,8 +537,8 @@ function onStartFrame(t, state) {
   // pilot stick
   if (stick.active != null && !stick.active.isGrasping()) {
     stick.active = null;
-    angle_w[0] = 0;
-    angle_w[1] = 0;
+    ship.dPitch = 0;
+    ship.dBank = 0;
     stick.Q = [0, 0, 0, 1];
   }
   for (let i = 0; i < Cs.length; ++i) {
@@ -554,8 +558,8 @@ function onStartFrame(t, state) {
       let s = Math.sin(p);
       D = [Math.sin(t) * c, s, Math.cos(t) * c];
       p = (Math.PI * .5 - p) / (Math.PI * .5 - stick.lim);
-      angle_w[0] = -Math.sin(t) * p;
-      angle_w[1] = Math.cos(t) * p;
+      ship.dBank = -Math.sin(t) * p;
+      ship.dPitch = Math.cos(t) * p;
       let A = CG.cross([0, 1, 0], D);
       t = Math.acos(CG.dot([0, 1, 0], D));
       c = Math.cos(t * .5);
@@ -577,7 +581,7 @@ function onStartFrame(t, state) {
       lever.active = C;
     if (lever.active == C) {
       lever.theta = CG.clamp(t, -lever.lim, lever.lim);
-      speed = 1000 * lever.theta / lever.lim;
+      ship.speed = 1000 * lever.theta / lever.lim;
     }
   }
 
@@ -1025,12 +1029,12 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
   if (out_side === 0) {
     m.save();
-      ship_loc = CG.add(ship_loc, CG.scale(dir, speed * dt));
-      angle[0] += angle_w[0] * dt;
-      angle[1] += angle_w[1] * dt;
-      m.translate(-ship_loc[0], -ship_loc[1], -ship_loc[2]);
-      m.rotateX(-angle[1]);
-      m.rotateZ(-angle[0]);
+      ship.loc = CG.add(ship.loc, CG.scale(ship.dir, ship.speed * dt));
+      ship.pitch += ship.dPitch * dt;
+      ship.bank += ship.dBank * dt;
+      m.translate(-ship.loc[0], -ship.loc[1], -ship.loc[2]);
+      m.rotateX(-ship.pitch);
+      m.rotateZ(-ship.bank);
       drawMilkyWay();
       drawSolarSystem();
       drawAsteroidBelt();
@@ -1039,7 +1043,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     miniature();
   } else {
     m.save();
-      arm_loc = CG.add(ship_loc, arm_loc);
+      arm_loc = CG.add(ship.loc, arm_loc);
       m.translate(-arm_loc[0], -arm_loc[1], -arm_loc[2]);
       drawSolarSystem();
     m.restore();
