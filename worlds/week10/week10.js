@@ -902,8 +902,8 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
     m.save();
        m.multiply(state.avatarMatrixForward);
-       m.translate(P[0],P[1],P[2]);
-       m.rotateQ(orientation);
+       if (P) m.translate(P[0],P[1],P[2]);
+       if (orientation) m.rotateQ(orientation);
        m.scale(.1);
 
        m.save();
@@ -1475,7 +1475,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         m.restore();
       }
     }
-  }
+  };
 
 
 
@@ -1492,12 +1492,8 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     drawAsteroidMiniatureMap();
   }
   else {
-
     let shape = [0, 4, -2];
-
-    //drawLaser(2);
-
-    let speed = 10;
+    let speed = 5;
     m.save();
       m.multiply(shipRot);
       m.translate(-shipLoc[0]-shape[0], -shipLoc[1]-shape[1], -shipLoc[2]-shape[2]);
@@ -1507,51 +1503,44 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
 
     /*--------------------------laser--------------------------*/
-    if (input.RC.isDown()){
+    if (input.RC.isDown()) {
 
       hold_time = hold_time + state.dt;
       laser_len = laser_speed * hold_time;
 
-    /*---------------------------------draw laser--------------------------*/
+      /*---------------------------------draw laser--------------------------*/
       m.save();
-
-         m.translate(0, EYE_HEIGHT, 0);
-         let LaserColor = [1,0,0],D;
-         let hand = input.RC.position();
-
-         m.save();
-            D = input.RC.orientation();
-            m.translate(hand[0], hand[1], hand[2]);
-            m.rotateQ(D);
-            m.translate(0,0.02,-laser_len);
-            m.scale(0.005,0.005,laser_len); //size of laser
-            drawShape(CG.cylinder, LaserColor);
-         m.restore();
-
+        m.translate(0, EYE_HEIGHT, 0);
+        let LaserColor = [1, 0, 0], D;
+        let hand = input.RC.position();
+        m.save();
+          D = input.RC.orientation();
+          m.translate(hand[0], hand[1], hand[2]);
+          m.rotateQ(D);
+          m.translate(0, 0.02, -laser_len);
+          m.scale(0.005, 0.005, laser_len); //size of laser
+          drawShape(CG.cylinder, LaserColor);
+        m.restore();
       m.restore();
       /*-------------------------------------------------------------------*/
-   }
+    } else {
+      // make it disappear
+      hold_time = 0;
+      m.save();
+        m.translate(0, EYE_HEIGHT, 0);
+        let LaserColor = [1, 0, 0], D;
+        let hand = input.RC.position();
 
-  else{
-        // make it disappear
-        hold_time = 0;
-    m.save();
-
-         m.translate(0, EYE_HEIGHT, 0);
-         let LaserColor = [1,0,0],D;
-         let hand = input.RC.position();
-
-         m.save();
-            D = input.RC.orientation();
-            m.translate(hand[0], hand[1], hand[2]);
-            m.rotateQ(D);
-            m.translate(0,0.02,-0);
-            m.scale(0.005,0.005,0);
-            drawShape(CG.cylinder, LaserColor);
-         m.restore();
-
-   m.restore();
-}
+        m.save();
+          D = input.RC.orientation();
+          m.translate(hand[0], hand[1], hand[2]);
+          m.rotateQ(D);
+          m.translate(0, 0.02, -0);
+          m.scale(0.005, 0.005, 0);
+          drawShape(CG.cylinder, LaserColor);
+        m.restore();
+      m.restore();
+    }
 
 
     if (LC && RC) {
@@ -1559,53 +1548,30 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         bullet_orientation = LC.orientation();
         shoot = true;
         life = 0;
-        start_pos =LC.position();
-        console.log(bullet_loc);
+        start_pos = LC.position();
         bullet_loc = [0, 0, 0];
-      }
-
-      if(!shoot) {
-        // m.save();
-        // let l = RC.tip().slice();
-        // m.translate(l[0], l[1], l[2]);
-        // m.scale(0.1, 0.1, 0.1);
-        // drawShape(CG.sphere, [1,1,1]);
-        // m.restore();
       }
     }
 
-    if(shoot) {
+    if (shoot) {
       life += state.dt;
-      if(life > 5) {
+      if (life > 10) {
         shoot = false;
         life = 0;
         bullet_loc = [0, 0, 0];
         bullet_orientation = [0, 0, -1];
       }
-      // bullet_loc = CG.add(bullet_loc, CG.scale(bullet_orientation, speed*state.dt));
-      // bullet_loc = CG.add(bullet_loc, CG.scale(bullet_orientation, speed*state.dt));
-      bullet_loc = CG.add(bullet_loc, CG.scale([0,0,-1], speed*state.dt));
+      bullet_loc = CG.add(bullet_loc, CG.scale([0, 0, -1], speed * state.dt));
 
-      if(life < 0.1) {
-        console.log(bullet_loc);
-      }
-
-      if(life < 0.1 ) console.log(bullet_orientation);
       m.save();
         m.translate(0, EYE_HEIGHT, 0);
         m.translate(start_pos[0], start_pos[1], start_pos[2]);
         m.rotateQ(bullet_orientation);
         m.translate(bullet_loc[0], bullet_loc[1], bullet_loc[2]);
-        m.scale(0.2, 0.2, 0.2);
-        drawShape(CG.sphere, [1,1,1], state.mats.sun);
+        m.scale(0.8, 0.8, 0.8);
+        drawShape(CG.sphere, [1, 1, 1], state.mats.sun);
       m.restore();
     }
-
-    // if (LC) {
-    //   if (LC.isDown() && shoot) {
-
-    //   }
-    // }
 
     m.save();
       m.translate(-shape[0], -shape[1], -shape[2]);
