@@ -390,6 +390,10 @@ async function setup(state) {
   'assets/audio/peacock.wav'
   ]);
 
+  this.BGM = new SpatialAudioContext([
+    'assets/audio/coward.mp3'
+  ]);
+
   for (let i = 0; i < MR.objs.length; ++i)
     MR.objs[i].spawn();
 }
@@ -1392,6 +1396,8 @@ function onEndFrame(t, state) {
 
     this.audioContext1.updateListener(input.HS.position(), input.HS.orientation());
     this.audioContext2.updateListener(input.HS.position(), input.HS.orientation());
+    this.BGM.updateListener(input.HS.position(), input.HS.orientation());
+
 
     // Here you initiate the 360 spatial audio playback from a given position,
     // in this case controller position, this can be anything,
@@ -1403,6 +1409,7 @@ function onEndFrame(t, state) {
 
     // if (input.RC && input.RC.press())
     //   this.audioContext2.playFileAt('assets/audio/peacock.wav', input.RC.position());
+    this.BGM.playFileAt('assets/audio/coward.mp3', input.HS.position());
   }
 
   if (input.LC) input.LC.onEndFrame();
