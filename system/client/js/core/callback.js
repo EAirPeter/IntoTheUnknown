@@ -11,6 +11,7 @@ MR.syncClient.eventBus.subscribe("initialize", (json) => {
     }
 
     const id = json["id"];
+    MR.playerid = id;
 
     let headset = new Headset(CG.cylinder);
     let leftController = new Controller(CG.cube);
@@ -23,8 +24,14 @@ MR.syncClient.eventBus.subscribe("initialize", (json) => {
         MR.avatars[avid] = avatar;
     }
 
+    for (let key in json["objects"]) {
+      const obj = json["objects"][key];
+      MR.objs[key].lock.lockedBy = obj["lockid"];
+      let pak = obj["state"];
+      MR.objs[key].byserver(obj["lockid"], pak.stamp, pak.state);
+    }
+
     // MR.avatars[id] = playerAvatar;
-    MR.playerid = id;
     console.log("player id is", id);
     console.log(MR.avatars);
 });
@@ -51,6 +58,9 @@ MR.syncClient.eventBus.subscribe("join", (json) => {
 MR.syncClient.eventBus.subscribe("leave", (json) => {
     console.log(json);
     delete MR.avatars[json["user"]];
+
+    if (MR.srvid.state == json["user"])
+      MR.srvid.state = -1;
 
     MR.updatePlayersMenu();
 });
@@ -195,7 +205,8 @@ MR.syncClient.eventBus.subscribe("object", (json) => {
      if (success) {
       //console.log("object moved: ", json);
       // update update metadata for next frame's rendering
-      MR.objs[json["uid"]].state = json["state"];
+      let pak = json["state"];
+      MR.objs[json["uid"]].byserver(json["lockid"], pak.stamp, pak.state);
     }
     else{
       console.log("failed object message", json);
