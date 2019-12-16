@@ -189,7 +189,7 @@ let bullet_loc = [0, 0, 0];
 let start_pos = [0, 0, 0];
 
 /*-------------------------add laser variables------------------------*/
-let laser_speed = 0.5;
+let laser_speed = 1;
 let laser_len = 0;
 let hold_time = 0;
 /*-------------------------add laser variables------------------------*/
@@ -1556,7 +1556,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
     if (LC && RC) {
       if (LC.press() && !shoot) {
-        bullet_orientation = RC.orientation();
+        bullet_orientation = LC.orientation();
         shoot = true;
         life = 0;
         start_pos =LC.position();
@@ -1592,11 +1592,12 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
       if(life < 0.1 ) console.log(bullet_orientation);
       m.save();
+        m.translate(0, EYE_HEIGHT, 0);
         m.translate(start_pos[0], start_pos[1], start_pos[2]);
         m.rotateQ(bullet_orientation);
         m.translate(bullet_loc[0], bullet_loc[1], bullet_loc[2]);
-        m.scale(0.1, 0.1, 0.1);
-        drawShape(CG.sphere, [1,1,1]);
+        m.scale(0.2, 0.2, 0.2);
+        drawShape(CG.sphere, [1,1,1], state.mats.sun);
       m.restore();
     }
 
