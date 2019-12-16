@@ -1153,13 +1153,14 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
-  let shiploc = ship.loc.state;
+  let shipLoc = ship.loc.state;
+  let shipRot = ship.rot.state;
   let drawSpaceship = (miniatureScale) => {
     m.save();
     let shipScale = 0.005;
     if (miniatureScale) shipScale *= miniatureScale;
-    m.translate(shiploc[0], shiploc[1], shiploc[2]);
-    m.multiply(CG.matrixTranspose(ship.rot));
+    m.translate(shipLoc[0], shipLoc[1], shipLoc[2]);
+    m.multiply(CG.matrixTranspose(shipRot));
     m.rotateX(-Math.PI / 2);
     m.rotateZ(Math.PI / 2);
     m.scale(shipScale, shipScale, shipScale);
@@ -1172,10 +1173,10 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   let drawSolarMiniatureMap = () => {
     m.save();
       let miniatureScale = 0.00004;
-      m.translate(-0.5, EYE_HEIGHT * 0.8, -0.4);
+      m.translate(-0.5, EYE_HEIGHT * 0.8, -0.3);
       m.scale(miniatureScale, miniatureScale, miniatureScale);
       drawSolarSystem();
-      drawSpaceship(100);
+      drawSpaceship(120);
     m.restore();
   };
 
@@ -1183,9 +1184,9 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   let drawAsteroidMiniatureMap = () => {
     m.save();
       let miniatureScale = 0.004;
-      m.translate(0.6, EYE_HEIGHT * 0.8, -0.4);
+      m.translate(0.7, EYE_HEIGHT * 0.8, -0.3);
       m.scale(miniatureScale, miniatureScale, miniatureScale);
-      m.translate(-shiploc[0], -shiploc[1], -shiploc[2]);
+      m.translate(-shipLoc[0], -shipLoc[1], -shipLoc[2]);
       drawAsteroidBelt();
       drawSpaceship();
     m.restore();
@@ -1221,9 +1222,9 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         }
       }
     };
-    let xCenter = Math.floor(shiploc[0] / interval) * interval - interval / 4;
-    let yCenter = Math.floor(shiploc[1] / interval) * interval - interval / 4;
-    let zCenter = Math.floor(shiploc[2] / interval) * interval - interval / 4;
+    let xCenter = Math.floor(shipLoc[0] / interval) * interval - interval / 4;
+    let yCenter = Math.floor(shipLoc[1] / interval) * interval - interval / 4;
+    let zCenter = Math.floor(shipLoc[2] / interval) * interval - interval / 4;
     drawByCenter(xCenter, yCenter, zCenter);
   };
 
@@ -1285,7 +1286,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   if (out_side === 0) {
     m.save();
       m.multiply(ship.rot.state);
-      m.translate(-shiploc[0], -shiploc[1], -shiploc[2]);
+      m.translate(-shipLoc[0], -shipLoc[1], -shipLoc[2]);
       drawMilkyWay();
       drawSolarSystem();
       drawAsteroidBelt();
@@ -1295,7 +1296,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     drawAsteroidMiniatureMap();
   } else {
     m.save();
-      arm_loc = CG.add(shiploc, arm_loc);
+      arm_loc = CG.add(shipLoc, arm_loc);
       m.translate(-arm_loc[0], -arm_loc[1], -arm_loc[2]);
       drawSolarSystem();
     m.restore();
