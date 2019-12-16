@@ -22,6 +22,12 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 let last_time = 0;
 let out_side = 1; // 0 means inside; 1 front
 let arm_loc = [out_side*3, 0, 0];
+let bullet_orientation = [0, 0, -1];
+
+let shoot = false;
+let life = 0;
+let bullet_loc = [0, 0, 0];
+
 
 let texs = {
   white:        {img: "white.png"},
@@ -439,6 +445,7 @@ function onStartFrame(t, state) {
   state.time = (t - state.tStart) / 1000;
 
   let dt = state.time - last_time;
+  state.dt = dt;
   last_time = state.time;
 
    // THIS CURSOR CODE IS ONLY RELEVANT WHEN USING THE BROWSER MOUSE, NOT WHEN IN VR MODE.
@@ -1264,9 +1271,53 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     miniature();
   } else {
     let shape = [0, 2, -2];
+    
+
+    let speed = 10;
     m.save();
     m.multiply(ship.rot);
     m.translate(-ship.loc[0]-shape[0], -ship.loc[1]-shape[1], -ship.loc[2]-shape[2]);
+    m.restore();
+    if (RC) {
+      if (RC.press() && !shoot) {
+        bullet_orientation = RC.orientation();
+        shoot = true;
+        life = 0;
+        bullet_loc = [0, 0, 0];
+      }
+      if(!shoot) {
+        m.save();
+        let l = RC.tip().slice();
+        m.translate(l[0], l[1], l[2]);
+        m.scale(0.1, 0.1, 0.1);
+        drawShape(CG.sphere, [1,1,1]);
+        m.restore();
+      }
+    }
+    
+    if(shoot) {
+      life += state.dt;
+      if(life > 5) {
+        shoot = false;
+        life = 0;
+        bullet_loc = [0, 0, 0];
+        bullet_orientation = [0, 0, -1];
+      }
+      bullet_loc = CG.add(bullet_loc, CG.scale([0, 0, -1], speed*state.dt));
+      // bullet_loc = CG.add(bullet_loc, CG.scale(bullet_orientation, speed*state.dt));
+      m.save();
+      m.translate(bullet_loc[0], bullet_loc[1], bullet_loc[2]);
+      m.scale(0.1, 0.1, 0.1);
+      drawShape(CG.sphere, [1,1,1]);
+      m.restore();
+    }
+
+    // if (LC) {
+    //   if (LC.isDown() && shoot) {
+        
+    //   }
+    // }
+
     drawMilkyWay();
     drawSolarSystem();
     drawAsteroidBelt();
