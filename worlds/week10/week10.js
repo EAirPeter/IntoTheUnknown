@@ -1079,7 +1079,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         radius: 140,
         distance: 1500,
         mat: state.mats.mercury,
-        T: 1000,
+        T: 500,
         phi: 10,
       },
       venus: {
@@ -1087,7 +1087,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         radius: 160,
         distance: 3000,
         mat: state.mats.venus,
-        T: 1200,
+        T: 600,
         phi: 200,
       },
       earth: {
@@ -1095,7 +1095,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         radius: 180,
         distance: 4500,
         mat: state.mats.earth,
-        T: 1500,
+        T: 750,
         phi: 30,
       },
       mars: {
@@ -1103,7 +1103,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         radius: 140,
         distance: 6000,
         mat: state.mats.mars,
-        T: 1800,
+        T: 900,
         phi: -300,
       },
       jupiter: {
@@ -1111,7 +1111,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         radius: 300,
         distance: 8000,
         mat: state.mats.jupiter,
-        T: 2300,
+        T: 1150,
         phi: 50,
       },
       saturn: {
@@ -1119,7 +1119,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         radius: 260,
         distance: 9000,
         mat: state.mats.saturn,
-        T: 2700,
+        T: 1350,
         phi: 60,
       },
       uranus: {
@@ -1127,7 +1127,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         radius: 200,
         distance: 10000,
         mat: state.mats.uranus,
-        T: 3100,
+        T: 1550,
         phi: 70,
       },
       neptune: {
@@ -1135,7 +1135,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         radius: 200,
         distance: 11000,
         mat: state.mats.neptune,
-        T: 3700,
+        T: 1850,
         phi: 80,
       }
     }
@@ -1145,6 +1145,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.save();
       m.translate(location[0], location[1], location[2]);
       m.scale(star.radius, star.radius, star.radius);
+      m.rotateY(0.01 * state.time);
       m.rotateX(Math.PI / 2);
       drawShape(CG.sphere, [1,1,1], star.mat);
     m.restore();
@@ -1156,6 +1157,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.translate(location[0] + planet.distance * Math.cos(Math.PI * 2 / planet.T * state.time + planet.phi),
           location[1], location[2] + planet.distance * Math.sin(Math.PI * 2 / planet.T * state.time + planet.phi));
       m.scale(planet.radius, planet.radius, planet.radius);
+      m.rotateY(0.1 * state.time);
       m.rotateX(Math.PI / 2);
       drawShape(CG.sphere, [1, 1, 1], planet.mat);
     m.restore();
@@ -1204,7 +1206,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.save();
       let miniatureScale = 0.004;
       // m.translate(1, EYE_HEIGHT * 1.0, -0.3);
-      m.translate(1.5, EYE_HEIGHT * 1.01, 2);
+      m.translate(1.5, EYE_HEIGHT * 1.1, 2);
       m.scale(miniatureScale, miniatureScale, miniatureScale);
       m.translate(-shipLoc[0], -shipLoc[1], -shipLoc[2]);
       drawAsteroidBelt();
