@@ -389,6 +389,7 @@ try {
                     const response = {
                         "type": "lock",
                         "uid": key,
+                        "id": ws.index,
                         "success": true
                     };
 
