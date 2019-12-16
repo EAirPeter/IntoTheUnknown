@@ -82,8 +82,14 @@ let ship = {
 };
 
 let last_time = 0;
-let out_side = 0; // -1 means left; 1 means right; 0 means inside.
+let out_side = 0; // 0 means inside; 1 front
 let arm_loc = [out_side*3, 0, 0];
+let bullet_orientation = [0, 0, -1];
+
+let shoot = false;
+let life = 0;
+let bullet_loc = [0, 0, 0];
+
 
 let texs = {
   white:        {img: "white.png"},
@@ -155,11 +161,14 @@ function HeadsetHandler(headset) {
 
 function ControllerHandler(controller) {
   this.isDown      = () => controller.buttons[1].pressed;
+  this.isDown2     = () => controller.buttons[2].pressed;
   this.isGrasping  = () => controller.buttons[1].pressed;
-  this.onEndFrame  = () => { wasDown = this.isDown(); wasGrasping = this.isGrasping(); }
+  this.onEndFrame  = () => { wasDown = this.isDown(); wasDown2 = this.isDown2(); wasGrasping = this.isGrasping(); }
   this.orientation = () => controller.pose.orientation;
   this.position    = () => controller.pose.position;
   this.press       = () => !wasDown && this.isDown();
+  this.press2      = () => !wasDown2 && this.isDown2();
+
   this.release     = () => wasDown && !this.isDown();
   this.grasp       = () => !wasGrasping && this.isGrasping();
   this.tip         = () => {
@@ -181,6 +190,7 @@ function ControllerHandler(controller) {
     return [v[12],v[13],v[14]];
   };
   let wasDown = false;
+  let wasDown2 = false;
   let wasGrasping = false;
 }
 
@@ -445,6 +455,13 @@ function onStartFrame(t, state) {
     MR.avatarMatrixInverse = state.avatarMatrixInverse = CG.matrixIdentity();
   }
 
+  if(input.LC) {
+    if (input.LC.press2()) {
+      out_side = 1 - out_side;
+    }
+  }
+
+
   if (MR.VRIsActive()) {
     if (!input.HS) input.HS = new HeadsetHandler(MR.headset);
     if (!input.LC) input.LC = new ControllerHandler(MR.leftController);
@@ -463,6 +480,7 @@ function onStartFrame(t, state) {
   state.time = (t - state.tStart) / 1000;
 
   let dt = state.time - last_time;
+  state.dt = dt;
   last_time = state.time;
 
    // THIS CURSOR CODE IS ONLY RELEVANT WHEN USING THE BROWSER MOUSE, NOT WHEN IN VR MODE.
@@ -957,10 +975,10 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
      /*
      m.save();
 
-     
+
      //m.identity();
      // joints
-    
+
      m.save();
         m.translate(A[0],A[1],A[2]).scale(.03);
         drawShape(CG.sphere, [1,1,1]);
@@ -969,7 +987,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         m.translate(M[0],M[1],M[2]).scale(.03);
         drawShape(CG.sphere, [-0.5,0.5,1]);
      m.restore();
-     
+
 
      //let skinColor = [1,0,1], D;
      
@@ -1001,7 +1019,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.translate(P[0], P[1], P[2]);
       m.rotateQ(rot);
       m.translate(0,.02,-.005);
-      
+
       let s = .0225;
 
          m.save();
@@ -1009,7 +1027,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
             m.scale(.01,.01,.046);
             drawShape(CG.sphere,[1,1,0]);
          m.restore();
-      
+
          m.save();
             m.translate(s,0,.001);
             m.scale(.01,.01,.046);
@@ -1303,6 +1321,34 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
+  let drawLaser = (length) => {
+
+    let W = [0,0,0];
+    let H = [0,0,0];
+    if(input.LC) {
+      if (input.LC.isDown()){
+
+        W = input.LC.position();
+
+        m.save();
+
+            m.translate(0, EYE_HEIGHT, 0);
+            let LaserColor = [1,0,0],D;
+            let hand = input.LC.position();
+
+            m.save();
+              D = input.LC.orientation();
+              m.translate(hand[0], hand[1], hand[2]);
+              m.rotateQ(D);
+              m.translate(0,0.02,-length);
+              m.scale(0.005,0.005,length);
+              drawShape(CG.cylinder, LaserColor);
+            m.restore();
+        m.restore();
+      }
+    }
+  }
+
 
 
   if (out_side === 0) {
@@ -1316,11 +1362,63 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     drawShip();
     drawSolarMiniatureMap();
     drawAsteroidMiniatureMap();
-  } else {
+  }
+  else {
+    let shape = [0, 2, -2];
+    drawLaser(2);
+    let speed = 10;
     m.save();
-      arm_loc = CG.add(shipLoc, arm_loc);
-      m.translate(-arm_loc[0], -arm_loc[1], -arm_loc[2]);
-      drawSolarSystem();
+    m.multiply(shipRot);
+    m.translate(-shipLoc[0]-shape[0], -shipLoc[1]-shape[1], -shipLoc[2]-shape[2]);
+    drawMilkyWay();
+    drawSolarSystem();
+    drawAsteroidBelt();
+    m.restore();
+    if (RC) {
+      if (RC.press() && !shoot) {
+        bullet_orientation = RC.orientation();
+        shoot = true;
+        life = 0;
+        bullet_loc = [0, 0, 0];
+      }
+      if(!shoot) {
+        m.save();
+        let l = RC.tip().slice();
+        m.translate(l[0], l[1], l[2]);
+        m.scale(0.1, 0.1, 0.1);
+        drawShape(CG.sphere, [1,1,1]);
+        m.restore();
+      }
+    }
+
+    if(shoot) {
+      life += state.dt;
+      if(life > 5) {
+        shoot = false;
+        life = 0;
+        bullet_loc = [0, 0, 0];
+        bullet_orientation = [0, 0, -1];
+      }
+      bullet_loc = CG.add(bullet_loc, CG.scale([0, 0, -1], speed*state.dt));
+      // bullet_loc = CG.add(bullet_loc, CG.scale(bullet_orientation, speed*state.dt));
+      m.save();
+      m.translate(bullet_loc[0], bullet_loc[1], bullet_loc[2]);
+      m.scale(0.1, 0.1, 0.1);
+      drawShape(CG.sphere, [1,1,1]);
+      m.restore();
+    }
+
+    // if (LC) {
+    //   if (LC.isDown() && shoot) {
+
+    //   }
+    // }
+
+
+
+    m.save();
+    m.translate(-shape[0], -shape[1], -shape[2]);
+    drawShip();
     m.restore();
   }
 
