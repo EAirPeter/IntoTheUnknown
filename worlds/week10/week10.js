@@ -1310,6 +1310,17 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
+  let drawStaticSpaceship = () => {
+    m.save();
+    let shipScale = 0.005;
+    m.rotateX(-Math.PI / 2);
+    m.rotateZ(Math.PI / 2);
+    m.scale(shipScale, shipScale, shipScale);
+    m.translate(-600, 600, 300);
+    drawShape(CG.spaceship, [1, 1, 1], state.mats.spaceship);
+    m.restore();
+  };
+
   // miniature of solar system
   let drawSolarMiniatureMap = () => {
     m.save();
@@ -1477,11 +1488,11 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     drawLaser(2);
     let speed = 10;
     m.save();
-    m.multiply(shipRot);
-    m.translate(-shipLoc[0]-shape[0], -shipLoc[1]-shape[1], -shipLoc[2]-shape[2]);
-    drawMilkyWay();
-    drawSolarSystem();
-    drawAsteroidBelt();
+      m.multiply(shipRot);
+      m.translate(-shipLoc[0]-shape[0], -shipLoc[1]-shape[1], -shipLoc[2]-shape[2]);
+      drawMilkyWay();
+      drawSolarSystem();
+      drawAsteroidBelt();
     m.restore();
     if (RC) {
       if (RC.press() && !shoot) {
@@ -1520,11 +1531,11 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
       if(life < 0.1 ) console.log(bullet_orientation);
       m.save();
-      m.translate(start_pos[0], start_pos[1], start_pos[2]);
-      m.rotateQ(bullet_orientation);
-      m.translate(bullet_loc[0], bullet_loc[1], bullet_loc[2]);
-      m.scale(0.1, 0.1, 0.1);
-      drawShape(CG.sphere, [1,1,1]);
+        m.translate(start_pos[0], start_pos[1], start_pos[2]);
+        m.rotateQ(bullet_orientation);
+        m.translate(bullet_loc[0], bullet_loc[1], bullet_loc[2]);
+        m.scale(0.1, 0.1, 0.1);
+        drawShape(CG.sphere, [1,1,1]);
       m.restore();
     }
 
@@ -1535,8 +1546,8 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     // }
 
     m.save();
-    m.translate(-shape[0], -shape[1], -shape[2]);
-    drawSpaceship();
+      m.translate(-shape[0], -shape[1], -shape[2]);
+      drawStaticSpaceship();
     m.restore();
   }
 
