@@ -20,7 +20,7 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 ////////////////////////////// SCENE SPECIFIC CODE
 
 let last_time = 0;
-let out_side = 0; // -1 means left; 1 means right; 0 means inside.
+let out_side = 1; // 0 means inside; 1 front
 let arm_loc = [out_side*3, 0, 0];
 
 let texs = {
@@ -1263,10 +1263,18 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     drawShip();
     miniature();
   } else {
+    let shape = [0, 2, -2];
     m.save();
-      arm_loc = CG.add(ship.loc, arm_loc);
-      m.translate(-arm_loc[0], -arm_loc[1], -arm_loc[2]);
-      drawSolarSystem();
+    m.multiply(ship.rot);
+    m.translate(-ship.loc[0]-shape[0], -ship.loc[1]-shape[1], -ship.loc[2]-shape[2]);
+    drawMilkyWay();
+    drawSolarSystem();
+    drawAsteroidBelt();
+    m.restore();
+
+    m.save();
+    m.translate(-shape[0], -shape[1], -shape[2]);
+    drawShip();
     m.restore();
   }
 
