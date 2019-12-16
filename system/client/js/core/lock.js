@@ -1,36 +1,40 @@
 class Lock {
-    constructor() {
-        this.locked = false;       
-    }
+  constructor(uid) {
+    this.lockedBy = -1;
+    this.uid = uid;
+  }
 
-    request(uid) {
-        console.log("send lock");
-        const response = 
-        {
-            type: "lock",
-            uid: uid,
-            lockid: MR.playerid
-        };
-        //console.log("Lock Message");
-        //console.log(response);
-        MR.syncClient.send(response);
-        return true;
-    }
+  locked() {
+    return this.lockedBy == MR.playerid;
+  }
 
-    release(uid) {
-        const response = 
-        {
-            type: "release",
-            uid: uid,
-            lockid: MR.playerid
-        };
-        //console.log("release Message");
-        //console.log(response);
-        MR.syncClient.send(response);
-        return true;
-    }
+  available() {
+    return this.lockedBy == -1;
+  }
 
-    onLock() {
-        this.locked = true;
-    }
+  lock() {
+    if (this.locked())
+      return true;
+    if (!this.available())
+      return false;
+    const response = {
+      type: "lock",
+      uid: this.uid,
+      lockid: MR.playerid
+    };
+    MR.syncClient.send(response);
+    return false;
+  }
+
+  unlock() {
+    if (!this.locked())
+      return;
+    this.lockedBy = -1;
+    const response = {
+      type: "release",
+      uid: this.uid,
+      lockid: MR.playerid
+    };
+    MR.syncClient.send(response);
+  }
 };

@@ -106,7 +106,7 @@ MR.syncClient.eventBus.subscribe("lock", (json) => {
 
     if (success) {
         console.log("acquire lock success: ", key);
-        MR.objs[key].lock.locked = true;
+        MR.objs[key].lock.lockedBy = json["id"];
     } else {
         console.log("acquire lock failed : ", key);
     }
@@ -132,6 +132,7 @@ MR.syncClient.eventBus.subscribe("release", (json) => {
 
     if (success) {
         console.log("release lock success: ", key);
+        MR.objs[key].lock.lockedBy = -1;
     } else {
         console.log("release lock failed : ", key);
     }
@@ -192,12 +193,9 @@ MR.syncClient.eventBus.subscribe("spawn", (json) => {
 MR.syncClient.eventBus.subscribe("object", (json) => {
     const success = json["success"];
      if (success) {
-      console.log("object moved: ", json);
+      //console.log("object moved: ", json);
       // update update metadata for next frame's rendering
-      let current = MR.objs[json["uid"]];
-      console.log(json);
-      current.position = [json["state"]["position"][0], json["state"]["position"][1], json["state"]["position"][2]];
-    //current.orientation = MR.objs[json["state"]["orientation"]];
+      MR.objs[json["uid"]].state = json["state"];
     }
     else{
       console.log("failed object message", json);

@@ -19,6 +19,67 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 
 ////////////////////////////// SCENE SPECIFIC CODE
 
+class Obj {
+  constructor(state) {
+    this.uid = MR.objs.length;
+    this.lock = new Lock(this.uid);
+    this.state = state;
+    MR.objs.push(this);
+  }
+
+  spawn(){
+    const response = {
+      type: "spawn",
+      uid: this.uid,
+      lockid: -1,
+      state: this.state,
+    };
+    MR.syncClient.send(response);
+  }
+
+  synchronize() {
+    const response = {
+      type: "object",
+      uid: this.uid,
+      lockid: MR.playerid,
+      state: this.state,
+    };
+    MR.syncClient.send(response);
+  }
+}
+
+MR.srvid = new Obj(-1);
+
+// pilot stick
+let stick = {
+  lim: Math.PI * .25,
+  min: .04,
+  max: .2,
+  active: null,
+  pos: [0, 1.4, -.4],
+  Q: new Obj([0, 0, 0, 1]),
+};
+
+// thrust lever
+let lever = {
+  lim: Math.PI * .25,
+  wid: .06,
+  min: .04,
+  max: .2,
+  active: null,
+  pos: [.2, 1.2, -.2],
+  theta: new Obj(0),
+};
+
+// spaceship
+let ship = {
+  maxSpeed: 800,
+  maxRot: .8,
+  //speed: 0,
+  loc: new Obj([0, 0, 0]),
+  rot: new Obj(CG.matrixIdentity()),
+};
+
 let last_time = 0;
 let out_side = 0; // -1 means left; 1 means right; 0 means inside.
 let arm_loc = [out_side*3, 0, 0];
@@ -290,11 +351,6 @@ async function setup(state) {
 
   state.cursor = ScreenCursor.trackCursor(MR.getCanvas());
 
-  //CG.ibo = gl.createBuffer();
-  //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CG.ibo);
-  //CG.vbo = gl.createBuffer();
-  //gl.bindBuffer(gl.ARRAY_BUFFER, CG.vbo);
-
   CG.aPos = gl.getAttribLocation(state.program, 'aPos');
   CG.aNor = gl.getAttribLocation(state.program, 'aNor');
   CG.aTan = gl.getAttribLocation(state.program, 'aTan');
@@ -331,29 +387,9 @@ async function setup(state) {
   'assets/audio/peacock.wav'
   ]);
 
-
-  /************************************************************************
-
-  Here we show an example of how to create a grabbable object.
-  First instatiate object using Obj() constructor, and add the following
-  variables. Then send a spawn message. This will allow the server to keep
-  track of objects that need to be synchronized.
-
-  ************************************************************************/
-
-  // MR.objs.push(grabbableCube);
-  // grabbableCube.position   = [0,0,-0.5].slice();
-  // grabbableCube.orientation = [1,0,0,1].slice();
-  // grabbableCube.uid = 0;
-  // grabbableCube.lock = new Lock();
-  // sendSpawnMessage(grabbableCube);
+  for (let i = 0; i < MR.objs.length; ++i)
+    MR.objs[i].spawn();
 }
-
-/************************************************************************
-
-This is an example of a spawn message we send to the server.
-
-************************************************************************/
 
 function sendSpawnMessage(object){
   const response =
@@ -370,37 +406,16 @@ function sendSpawnMessage(object){
   MR.syncClient.send(response);
 }
 
-// spaceship
-let ship = {
-  maxSpeed: 800,
-  maxRot: .04,
-  loc: [0, 0, 0],
-  rot: CG.matrixIdentity(),
-  speed: 0,
-}
-
-// pilot stick
-let stick = {
-  lim: Math.PI * .25,
-  min: .04,
-  max: .2,
-  pos: [0, 1.4, -.4],
-  active: null,
-  Q: [0, 0, 0, 1],
-};
-
-// thrust lever
-let lever = {
-  lim: Math.PI * .25,
-  wid: .06,
-  min: .04,
-  max: .2,
-  pos: [.2, 1.2, -.2],
-  active: null,
-  theta: 0,
-};
-
 function onStartFrame(t, state) {
+  (function() {
+    if (MR.srvid.state in MR.avatars)
+      return;
+    if (!MR.srvid.lock.lock())
+      return;
+    MR.srvid.state = MR.playerid;
+    MR.srvid.synchronize();
+    MR.srvid.lock.unlock();
+  })();
 
   /*-----------------------------------------------------------------
 
@@ -536,79 +551,92 @@ function onStartFrame(t, state) {
   if (input.RC && input.RC.isGrasping())
     Cs.push(input.RC);
   // pilot stick
-  if (stick.active != null && !stick.active.isGrasping()) {
-    stick.active = null;
-    stick.Q = [0, 0, 0, 1];
-  }
-  for (let i = 0; i < Cs.length; ++i) {
-    let C = Cs[i];
-    if (stick.active != null && stick.active != C)
-      continue;
-    let D = CG.add(CG.subtract(C.position(), stick.pos), [0, EYE_HEIGHT + stick.min, 0]);
-    let d = CG.norm(D);
-    let p = Math.atan2(D[1], Math.hypot(D[2], D[0]));
-    let t = Math.atan2(D[0], D[2]);
-    let update = false;
-    if (C.grasp() && stick.min < d && d < stick.max && p >= stick.lim)
-      stick.active = C;
-    if (stick.active == C) {
-      p = CG.clamp(p, stick.lim, Math.PI * .5);
-      let c = Math.cos(p);
-      let s = Math.sin(p);
-      D = [Math.sin(t) * c, s, Math.cos(t) * c];
-      p = (Math.PI * .5 - p) / (Math.PI * .5 - stick.lim);
-      ship.rot = CG.matrixMultiply(CG.matrixRotateZ(+ship.maxRot * Math.sin(t) * p), ship.rot);
-      ship.rot = CG.matrixMultiply(CG.matrixRotateX(-ship.maxRot * Math.cos(t) * p), ship.rot);
-      let A = CG.cross([0, 1, 0], D);
-      t = Math.acos(CG.dot([0, 1, 0], D));
-      c = Math.cos(t * .5);
-      s = Math.sin(t * .5);
-      stick.Q = [A[0] * s, A[1] * s, A[2] * s, c];
+  (function() {
+    if (stick.active != null && !stick.active.isGrasping())
+      stick.active = null;
+    for (let i = 0; i < Cs.length; ++i) {
+      let C = Cs[i];
+      if (stick.active != null && stick.active != C)
+        continue;
+      let D = CG.add(CG.subtract(C.position(), stick.pos), [0, EYE_HEIGHT + stick.min, 0]);
+      let d = CG.norm(D);
+      let p = Math.atan2(D[1], Math.hypot(D[2], D[0]));
+      let t = Math.atan2(D[0], D[2]);
+      if (C.grasp() && stick.min < d && d < stick.max && p >= stick.lim)
+        stick.active = C;
+      if (stick.active == C) {
+        if (!stick.Q.lock.lock())
+          continue;
+        p = CG.clamp(p, stick.lim, Math.PI * .5);
+        let c = Math.cos(p);
+        let s = Math.sin(p);
+        D = [Math.sin(t) * c, s, Math.cos(t) * c];
+        p = (Math.PI * .5 - p) / (Math.PI * .5 - stick.lim);
+        let rot = CG.matrixMultiply(CG.matrixRotateZ(+ship.maxRot * Math.sin(t) * p * dt), ship.rot.state);
+        ship.rot.state = CG.matrixMultiply(CG.matrixRotateX(-ship.maxRot * Math.cos(t) * p * dt), rot);
+        ship.rot.synchronize();
+        let A = CG.cross([0, 1, 0], D);
+        t = Math.acos(CG.dot([0, 1, 0], D));
+        c = Math.cos(t * .5);
+        s = Math.sin(t * .5);
+        stick.Q.state = [A[0] * s, A[1] * s, A[2] * s, c];
+        stick.Q.synchronize();
+      }
     }
-  }
+    if (stick.active == null && stick.Q.lock.locked()) {
+      stick.Q.state = [0, 0, 0, 1];
+      stick.Q.synchronize();
+      stick.Q.lock.unlock();
+    }
+  })();
   // thrust lever
-  if (lever.active != null && !lever.active.isGrasping())
-    lever.active = null;
-  for (let i =  0; i < Cs.length; ++i) {
-    let C = Cs[i];
-    if (lever.active != null && lever.active != C)
-      continue;
-    let D = CG.add(CG.subtract(C.position(), lever.pos), [0, EYE_HEIGHT + lever.min, 0]);
-    let d = Math.hypot(D[1], D[2]);
-    let t = Math.atan2(-D[2], D[1]);
-    if (C.grasp() && lever.min < d && d < lever.max + .02 && Math.abs(D[0]) < lever.wid && Math.abs(t) <= lever.lim)
-      lever.active = C;
-    if (lever.active == C) {
-      lever.theta = CG.clamp(t, -lever.lim, lever.lim);
-      ship.speed = ship.maxSpeed * lever.theta / lever.lim;
+  (function() {
+    if (lever.active != null && !lever.active.isGrasping())
+      lever.active = null;
+    for (let i = 0; i < Cs.length; ++i) {
+      let C = Cs[i];
+      if (lever.active != null && lever.active != C)
+        continue;
+      let D = CG.add(CG.subtract(C.position(), lever.pos), [0, EYE_HEIGHT + lever.min, 0]);
+      let d = Math.hypot(D[1], D[2]);
+      let t = Math.atan2(-D[2], D[1]);
+      if (C.grasp() && lever.min < d && d < lever.max + .02 && Math.abs(D[0]) < lever.wid && Math.abs(t) <= lever.lim)
+        lever.active = C;
+      if (lever.active == C) {
+        if (!lever.theta.lock.lock())
+          continue;
+        lever.theta.state = CG.clamp(t, -lever.lim, lever.lim);
+        lever.theta.synchronize();
+      }
     }
+    if (lever.active == null && lever.theta.lock.locked())
+      lever.theta.lock.unlock();
+  })();
+
+  if (MR.srvid.state == MR.playerid) {
+    let speed = ship.maxSpeed * lever.theta.state / lever.lim;
+    ship.loc.state = CG.add(ship.loc.state, CG.matrixTransform(CG.matrixTranspose(ship.rot.state), [0, 0, -speed * dt, 0]));
+    ship.loc.synchronize();
   }
 
-  ship.loc = CG.add(ship.loc, CG.matrixTransform(CG.matrixTranspose(ship.rot), [0, 0, -ship.speed * dt, 0]));
+  // /*-----------------------------------------------------------------
 
-   /*-----------------------------------------------------------------
+  // This function releases stale locks. Stale locks are locks that
+  // a user has already lost ownership over by letting go
 
-   This function releases stale locks. Stale locks are locks that
-   a user has already lost ownership over by letting go
+  // -----------------------------------------------------------------*/
 
-   -----------------------------------------------------------------*/
+  // releaseLocks(state);
 
-   releaseLocks(state);
+  // /*-----------------------------------------------------------------
 
-   /*-----------------------------------------------------------------
+  // This function checks for intersection and if user has ownership over
+  // object then sends a data stream of position and orientation.
 
-   This function checks for intersection and if user has ownership over
-   object then sends a data stream of position and orientation.
+  // -----------------------------------------------------------------*/
 
-   -----------------------------------------------------------------*/
-
-   pollGrab(state);
+  // pollGrab(state);
 }
-
-function Obj(shape) {
-  this.shape = shape;
-}
-
 
 function onDraw(t, projMat, viewMat, state, eyeIdx) {
   m.identity();
@@ -781,37 +809,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   }
 
-
-   /*-----------------------------------------------------------------
-
-   This is where I draw the objects that have been created.
-
-   If I were to make these objects interactive (that is, responsive
-   to the user doing things with the controllers), that logic would
-   need to go into onStartFrame(), not here.
-
-   -----------------------------------------------------------------*/
-
-  for (let n = 0 ; n < MR.objs.length ; n++) {
-    let obj = MR.objs[n], P = obj.position;
-    m.save();
-      m.multiply(state.avatarMatrixForward);
-      m.translate(P[0], P[1], P[2]);
-      m.rotateQ(obj.orientation);
-      m.scale(.03,.03,.03);
-      drawShape(obj.shape, [1,1,1]);
-    m.restore();
-  }
-
   m.translate(0, -EYE_HEIGHT, 0);
-
-   /*-----------------------------------------------------------------
-
-   Notice that I make the room itself as an inside-out cube, by
-   scaling x,y and z by negative amounts. This negative scaling
-   is a useful general trick for creating interiors.
-
-   -----------------------------------------------------------------*/
 
   let drawMilkyWay = () => {
     m.save();
@@ -990,7 +988,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.restore();
       m.save();
         m.translate(0, -stick.min, 0);
-        m.rotateQ(stick.Q);
+        m.rotateQ(stick.Q.state);
         m.rotateX(Math.PI * .5);
         m.translate(0, 0, -(stick.max + stick.min) * .5);
         m.scale(.01, .01, (stick.max - stick.min) * .5);
@@ -1007,7 +1005,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.restore();
       m.save();
         m.translate(0, -lever.min, 0);
-        m.rotateX(-lever.theta);
+        m.rotateX(-lever.theta.state);
         m.translate(0, lever.max, 0);
         m.rotateY(Math.PI * .5);
         m.scale(.016, .016, lever.wid + .02);
@@ -1016,7 +1014,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       for (let i = -1; i <= 1; i += 2) {
         m.save();
           m.translate(i * lever.wid, -lever.min, 0);
-          m.rotateX(Math.PI * .5 - lever.theta);
+          m.rotateX(Math.PI * .5 - lever.theta.state);
           m.translate(0, 0, -(lever.max + lever.min) * .5);
           m.scale(.01, .01, (lever.max - lever.min) * .5);
           drawShape(CG.tube, [1,1,1]);
@@ -1026,10 +1024,11 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   };
 
 
+  let shiploc = ship.loc.state;
   if (out_side === 0) {
     m.save();
-      m.multiply(ship.rot);
-      m.translate(-ship.loc[0], -ship.loc[1], -ship.loc[2]);
+      m.multiply(ship.rot.state);
+      m.translate(-shiploc[0], -shiploc[1], -shiploc[2]);
       drawMilkyWay();
       drawSolarSystem();
       drawAsteroidBelt();
@@ -1038,7 +1037,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     miniature();
   } else {
     m.save();
-      arm_loc = CG.add(ship.loc, arm_loc);
+      arm_loc = CG.add(shiploc, arm_loc);
       m.translate(-arm_loc[0], -arm_loc[1], -arm_loc[2]);
       drawSolarSystem();
     m.restore();
@@ -1184,47 +1183,47 @@ function calcBoundingBox(verts) {
   return [min, max];
 }
 
-function pollGrab(state) {
-  let input = state.input;
-  if ((input.LC && input.LC.isDown()) || (input.RC && input.RC.isDown())) {
-
-    let controller = input.LC.isDown() ? input.LC : input.RC;
-    for (let i = 0; i < MR.objs.length; i++) {
-      //ALEX: Check if grabbable.
-      let isGrabbed = checkIntersection(controller.position(), MR.objs[i].shape);
-      //requestLock(MR.objs[i].uid);
-      if (isGrabbed == true) {
-        if (MR.objs[i].lock.locked) {
-          MR.objs[i].position = controller.position();
-          const response =
-          {
-            type: "object",
-            uid: MR.objs[i].uid,
-            state: {
-              position: MR.objs[i].position,
-              orientation: MR.objs[i].orientation,
-            },
-            lockid: MR.playerid,
-
-          };
-
-          MR.syncClient.send(response);
-        } else {
-          MR.objs[i].lock.request(MR.objs[i].uid);
-        }
-      }
-    }
-  }
-}
-
-function releaseLocks(state) {
-  let input = state.input;
-  if ((input.LC && !input.LC.isDown()) && (input.RC && !input.RC.isDown())) {
-    for (let i = 0; i < MR.objs.length; i++) {
-      if (MR.objs[i].lock.locked == true) {
-        MR.objs[i].lock.locked = false;
-        MR.objs[i].lock.release(MR.objs[i].uid);
-      }
-    }
-  }
-}
+//function pollGrab(state) {
+//  let input = state.input;
+//  if ((input.LC && input.LC.isDown()) || (input.RC && input.RC.isDown())) {
+//
+//    let controller = input.LC.isDown() ? input.LC : input.RC;
+//    for (let i = 0; i < MR.objs.length; i++) {
+//      //ALEX: Check if grabbable.
+//      let isGrabbed = checkIntersection(controller.position(), MR.objs[i].shape);
+//      //requestLock(MR.objs[i].uid);
+//      if (isGrabbed == true) {
+//        if (MR.objs[i].lock.locked) {
+//          MR.objs[i].position = controller.position();
+//          const response =
+//          {
+//            type: "object",
+//            uid: MR.objs[i].uid,
+//            state: {
+//              position: MR.objs[i].position,
+//              orientation: MR.objs[i].orientation,
+//            },
+//            lockid: MR.playerid,
+//
+//          };
+//
+//          MR.syncClient.send(response);
+//        } else {
+//          MR.objs[i].lock.request(MR.objs[i].uid);
+//        }
+//      }
+//    }
+//  }
+//}
+//
+//function releaseLocks(state) {
+//  let input = state.input;
+//  if ((input.LC && !input.LC.isDown()) && (input.RC && !input.RC.isDown())) {
+//    for (let i = 0; i < MR.objs.length; i++) {
+//      if (MR.objs[i].lock.locked == true) {
+//        MR.objs[i].lock.locked = false;
+//        MR.objs[i].lock.release(MR.objs[i].uid);
+//      }
+//    }
+//  }
+//}
