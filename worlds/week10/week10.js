@@ -204,9 +204,7 @@ async function setup(state) {
     const model = await axios.get("objs/" + modelName + ".json");
     CG[modelName] = new CG.Model(model.data);
   };
-  await loadJsonModel("asteroid1");
-  await loadJsonModel("asteroid2");
-  await loadJsonModel("asteroid3");
+  await loadJsonModel("asteroid");
   // const asteroid2 = await axios.get("objs/asteroid2.json");
   // CG.asteroid2 = new CG.Model(asteroid2.data);
   // const asteroid3 = await axios.get("objs/asteroid3.json");
@@ -377,7 +375,7 @@ let ship = {
   loc: [0, 0, 0],
   rot: CG.matrixIdentity(),
   speed: 0,
-}
+};
 
 // pilot stick
 let stick = {
@@ -900,17 +898,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     }
   };
 
-  let asteroidCenterPosAdjustment = {
-    "1": [-15, -90, -10],
-    "2": [0, 0, 0],
-    "3": [0, 0, 0],
-  };
-  let asteroidScale = {
-    "1": 0.05,
-    "2": 0.1,
-    "3": 4,
-  };
-
   let drawStar = (location, star) => {
     m.save();
       m.translate(location[0], location[1], location[2]);
@@ -932,7 +919,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   };
 
   let drawSolarSystem = () => {
-    // draw solar system
     m.save();
       drawStar(sunLoc, solarSystemData.star.sun);
       for (const p in solarSystemData.planet) {
@@ -953,23 +939,44 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
-  let drawAsteroid = (i, pos) => {
+  let drawAsteroid = (pos) => {
+    let asteroidCenterPosAdjustment = [-15, -90, -10];
+    let asteroidScale = 0.05;
     m.save();
-      m.translate(pos[0], pos[1], pos[2]);
-      m.rotateX(0.2 * state.time);
-      m.rotateY(0.5 * state.time);
-      m.rotateZ(0.3 * state.time);
-      m.scale(asteroidScale[i], asteroidScale[i], asteroidScale[i]);
-      m.translate(asteroidCenterPosAdjustment[i]);
-      let modelName = "asteroid" + i;
-      drawShape(CG[modelName], [1, 1, 1], state.mats.asteroid);
+      let x = pos[0] + 40 * noise.noise(3 * pos[0], 4 * pos[1], 5 * pos[2]);
+      let y = pos[1] + 40 * noise.noise(3 * pos[0], 4 * pos[1], 8 * pos[2]);
+      let z = pos[2] + 20 * noise.noise(8 * pos[0], 1 * pos[1], 3 * pos[2]);
+      m.translate(x, y, z);
+      m.rotateX(noise.noise(pos[0], pos[1], pos[2]) * state.time);
+      m.rotateY(noise.noise(pos[0], pos[1], pos[2]) * state.time);
+      m.rotateZ(noise.noise(pos[0], pos[1], pos[2]) * state.time);
+      let s = (0.75 + Math.abs(Math.cos(noise.noise(3 * pos[0], 4 * pos[1], 5 * pos[2]))) / 2) * asteroidScale;
+      m.scale(s, s, s);
+      m.translate(asteroidCenterPosAdjustment);
+      drawShape(CG.asteroid, [1, 1, 1], state.mats.asteroid);
     m.restore();
   };
 
   let drawAsteroidBelt = () => {
-    drawAsteroid(1, [-10, 2, -8]);
-    drawAsteroid(2, [0, 2, -8]);
-    drawAsteroid(3, [10, 2, -8]);
+    let interval = 27.1;
+    let r = 2;
+    let drawByCenter = (xCenter, yCenter, zCenter) => {
+      for (let x = xCenter - r * interval; x <= xCenter + r * interval; x += interval) {
+        for (let y = yCenter - r * interval; y <= yCenter + r * interval; y += interval) {
+          for (let z = zCenter - 2 * r * interval; z <= zCenter + interval; z += interval) {
+            drawAsteroid([x, y, z]);
+          }
+        }
+      }
+    };
+    let xCenter = Math.floor(ship.loc[0] / interval) * interval - interval / 3;
+    let yCenter = Math.floor(ship.loc[1] / interval) * interval - interval / 3;
+    let zCenter = Math.floor(ship.loc[2] / interval) * interval - interval / 3;
+    drawByCenter(xCenter, yCenter, zCenter);
+    xCenter = xCenter + 2 * interval / 3;
+    yCenter = yCenter + 2 * interval / 3;
+    zCenter = zCenter + 2 * interval / 3;
+    drawByCenter(xCenter, yCenter, zCenter);
   };
 
   let drawShip = () => {
