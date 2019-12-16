@@ -681,58 +681,281 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
    -----------------------------------------------------------------*/
 
-  let drawHeadset = (position, orientation) => {
+   let drawHeadset = (position, orientation) => {
+      
     let P = position;
 
     m.save();
-      m.multiply(state.avatarMatrixForward);
-      m.translate(P[0],P[1],P[2]);
-      m.rotateQ(orientation);
-      m.scale(.1);
-      m.save();
-        m.scale(1,1.5,1);
-        drawShape(CG.sphere, [0,0,0]);
-      m.restore();
-      for (let s = -1 ; s <= 1 ; s += 2) {
-        m.save();
-          m.translate(s*.4,.2,-.8);
-          m.scale(.4,.4,.1);
-          drawShape(CG.sphere, [10,10,10]);
-        m.restore();
-      }
-    m.restore();
-  };
+       m.multiply(state.avatarMatrixForward);
+       m.translate(P[0],P[1],P[2]);
+       m.rotateQ(orientation);
+       m.scale(0.1);
+       m.save();
+          m.scale(1.5,1.5,1.5);
+          drawShape(CG.sphere, [0,0,0]);
+       m.restore();
 
-  let drawController = (C, hand) => {
-    let P = C.position();
-    m.save();
-      m.multiply(state.avatarMatrixForward);
-      m.translate(P[0],P[1],P[2]);
-      m.rotateQ(C.orientation());
-      m.translate(0,.02,-.005);
-      m.rotateX(.75);
-      m.save();
-        m.translate(0,0,-.0095).scale(.004,.004,.003);
-        drawShape(CG.sphere, C.isDown() ? [10,0,0] : [.5,0,0]);
-      m.restore();
-      m.save();
-        m.translate(0,0,-.01).scale(.04,.04,.13);
-        drawShape(CG.torus1, [0,0,0]);
-      m.restore();
-      m.save();
-        m.translate(0,-.0135,-.008).scale(.04,.0235,.0015);
-        drawShape(CG.cylinder, [0,0,0]);
-      m.restore();
-      m.save();
-        m.translate(0,-.01,.03).scale(.012,.02,.037);
-        drawShape(CG.cylinder, [0,0,0]);
-      m.restore();
-      m.save();
-        m.translate(0,-.01,.067).scale(.012,.02,.023);
-        drawShape(CG.sphere, [0,0,0]);
-      m.restore();
+       // eyes
+       for (let s = -1 ; s <= 1 ; s += 2) {
+          m.save();
+             m.translate(s*.4,.3,-1.45);
+             m.scale(.8,.8,.1);
+             drawShape(CG.sphere, [10,10,10]);
+          m.restore();
+       }
+
+       // eye balls
+       for (let s = -1 ; s <= 1 ; s += 2) {
+          m.save();
+             m.translate(s*.4,.3,-1.5);
+             m.scale(.3,.3,.1);
+             drawShape(CG.sphere, [1,10,10]);
+          m.restore();
+       }
+
+       // heli
+       m.save();    
+             m.translate(0,2,0);
+             m.rotateX(1.57);
+             m.scale(.1,.1,.6);
+             drawShape(CG.cylinder, [0,0,0]);
+       m.restore();
+
+       m.save();    
+             m.translate(0,2.6,0);
+             m.rotateY(10*state.time);
+             m.scale(.1,.1,1.4);
+             drawShape(CG.cylinder, [Math.sin(state.time),1,1]);
+       m.restore();
+
     m.restore();
-  };
+   }
+
+   let drawHeadset1 = (position, orientation) => {
+      
+    let P = position;
+
+    m.save();
+       m.multiply(state.avatarMatrixForward);
+       m.translate(P[0],P[1],P[2]);
+       m.rotateQ(orientation);
+       m.scale(.1);
+
+       m.save();
+          m.scale(1.5,1.5,1.5);
+          drawShape(CG.sphere, [0.8,0.5,0.5]);
+       m.restore();
+
+       // eyes
+       m.save();
+          m.translate(0,.3,-1.45);
+          m.scale(.8,.8,.1);
+          drawShape(CG.sphere, [10,10,10]);
+       m.restore();
+    
+       // eye balls
+       m.save();
+          m.translate(0,.3,-1.5);
+          m.scale(.5,.5,.1);
+          drawShape(CG.sphere, [1,10,10]);            
+       m.restore();
+       
+       m.save();    
+             m.translate(0,1.5,0);
+             m.rotateX(1.57);
+             m.scale(.7,.7,1.2);
+             drawShape(CG.sphere, [0,0,0]);
+       m.restore();
+
+       m.save();    
+             m.translate(0,1.5,-0.4);
+             m.rotateX(1.57);
+             m.scale(.7,1.2,0.02);
+             drawShape(CG.cylinder, [0,0,0]);
+       m.restore();
+
+    m.restore();
+   }
+
+   let drawHeadset2 = (position, orientation) => {
+      
+      
+    let P = position;
+    
+    m.save();
+
+       m.multiply(state.avatarMatrixForward);
+       m.translate(P[0],P[1],P[2]+1);
+       m.rotateQ(orientation);
+       m.scale(0.1);
+       m.save();
+          m.scale(2,2,2);
+          drawShape(CG.cube, [1,1,0]);
+       m.restore();
+
+       for (let s = -1 ; s <= 1 ; s += 2) {
+          m.save();
+             m.translate(s*.7,.4,-2);
+             m.scale(.5,.5,.1);
+             drawShape(CG.torus, [10,10,10]);
+          m.restore();
+       }
+
+       for (let s = -1 ; s <= 1 ; s += 2) {
+          m.save();
+             m.translate(s*.7,.4,-2);
+             m.scale(.3, Math.max(0.3*Math.sin(4*state.time),0),.1);
+             drawShape(CG.sphere, [1,10,10]);
+          m.restore();
+       }
+
+       m.save();    
+             m.translate(0,2,0);
+             m.rotateX(1.57);
+             m.scale(.1,.1,1.8);
+             drawShape(CG.cube, [0,0,0]);
+       m.restore();
+
+       m.save();    
+             m.translate(0,3.8,0);
+             m.rotateY(10*state.time);
+             m.rotateX(1);
+             m.scale(.1,.1,1.4);
+             drawShape(CG.cube, [Math.sin(state.time),1,1]);
+       m.restore();
+
+       m.save();    
+             m.translate(0,3.8,0);
+             m.rotateY(5*state.time);
+             m.rotateX(-1);
+             m.scale(.1,.1,1.4);
+             drawShape(CG.cube, [Math.sin(state.time),1,1]);
+       m.restore();
+       
+       m.save();    
+       m.translate(0,3.8,0);
+       m.rotateY(-10*state.time);
+       m.rotateX(0);
+       m.scale(.1,.1,1.4);
+       drawShape(CG.cube, [Math.sin(state.time),1,1]);
+       m.restore();
+
+    m.restore();
+ }
+
+
+
+ let drawController = (C, hand) => {
+
+  let P = C.position();
+
+  m.save();
+
+  m.multiply(state.avatarMatrixForward);
+  m.translate(P[0],P[1],P[2]);
+  m.rotateQ(C.orientation());
+  m.translate(0,.02,-.005);
+  
+  let s = C.isDown() ? .0125 : .0225;
+  let color = [1,1,0];
+  
+     m.save();
+        m.translate(-s,0,.001);
+        m.scale(.01,.01,.046);
+        drawShape(CG.sphere,[1,1,0]);
+     m.restore();
+  
+    m.save();
+       m.translate(s,0,.001);
+       m.scale(.01,.01,.046);
+        drawShape(CG.sphere, [1,1,0]);
+    m.restore();
+
+     m.save();
+        m.translate(-0,s,.001);
+        m.scale(.01,.01,.046);
+        drawShape(CG.sphere, color);
+     m.restore();
+
+     m.save();
+        m.translate( 0,-s,.001);
+        m.scale(.01,.01,.046);
+        drawShape(CG.sphere, color);
+     m.restore();
+
+     m.save();
+        m.translate(0,0,.025);
+        m.scale(.035,.035,.035);
+        drawShape(CG.sphere, [0,0,0]);
+     m.restore();
+
+    
+    // draw arms
+    let W = [-0.08*Math.sin(2 * state.time),-0.1*Math.cos(2 * state.time),0];
+    let H = [0,0,0];
+    
+    // get pos in VR
+    
+    if (C)
+       W = C.position();
+    if (input.HS){        
+       H = input.HS.position();
+       //let O = input.HS.orientation();
+       }
+     
+     
+     //let dir = [-O[2]/(Math.sqrt(Math.pow(O[2],2)) + Math.sqrt(pow(O[0],2))), 0, O[0]/(Math.sqrt(Math.pow(O[2],2)) + Math.sqrt(pow(O[0],2)))];
+    
+     let A = [0,0,0];
+
+     if (hand)
+        A = [H[0] + 0.1, H[1]-0.1, H[2]+0.05];
+     else
+        A = [H[0] - 0.1, H[1]-0.1, H[2]+0.05];
+
+     let B = W; 
+
+     let length  = Math.sqrt(Math.pow(A[0]- B[0],2) + Math.pow(A[1] - B[1],2) + Math.pow(A[2] - B[2],2));
+           
+     let M = CG.ik(0.5*length,0.5*length, B, [0,0,1]);
+  
+     m.save();
+     
+
+     m.identity();
+     // joints
+     /*
+     m.save();
+        m.translate(A[0],A[1],A[2]).scale(.03);
+        drawShape(CG.sphere, [1,1,1]);
+     m.restore();
+     m.save();
+        m.translate(M[0],M[1],M[2]).scale(.03);
+        drawShape(CG.sphere, [-0.5,0.5,1]);
+     m.restore();
+     */
+
+     let skinColor = [1,0,1], D;
+     
+     m.save();
+        D = CG.mix(A,B,0.5);
+        m.translate(D[0],D[1],D[2]);
+        m.aimZ(CG.subtract(A,B));
+        m.scale(.01,.01,0.5*length); //0.14 
+        drawShape(lathe, skinColor, -1,1, 2,1);
+     m.restore();
+
+     //m.save();
+        //D = CG.mix(M,B,0.5);
+        //m.translate(D[0],D[1],D[2]).aimZ(CG.subtract(M,B))
+        //m.scale(.01,.01,0.27*length);
+        //drawShape(lathe, skinColor, -1,1, 2,1);
+     //m.restore();
+
+     m.restore();
+
+  m.restore();
+ }
 
   let drawSyncController = (pos, rot, color) => {
     let P = pos;
@@ -1075,6 +1298,19 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
       let hpos = headsetPos.slice();
       hpos[1] += EYE_HEIGHT;
+
+
+      /*
+      
+      //get all avatars in 
+      if (id == '')
+        drawHeadset1(hpos, headsetRot);
+      if (id == '')
+        drawHeadset1(hpos, headsetRot);
+      if (id == '')
+        drawHeadset2(hpos, headsetRot); 
+      
+        */
 
       drawHeadset(hpos, headsetRot);
       let lpos = lcontroller.position.slice();
