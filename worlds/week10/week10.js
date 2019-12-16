@@ -204,9 +204,7 @@ async function setup(state) {
     const model = await axios.get("objs/" + modelName + ".json");
     CG[modelName] = new CG.Model(model.data);
   };
-  await loadJsonModel("asteroid1");
-  await loadJsonModel("asteroid2");
-  await loadJsonModel("asteroid3");
+  await loadJsonModel("asteroid");
   // const asteroid2 = await axios.get("objs/asteroid2.json");
   // CG.asteroid2 = new CG.Model(asteroid2.data);
   // const asteroid3 = await axios.get("objs/asteroid3.json");
@@ -899,17 +897,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     }
   };
 
-  let asteroidCenterPosAdjustment = {
-    "1": [-15, -90, -10],
-    "2": [0, 0, 0],
-    "3": [0, 0, 0],
-  };
-  let asteroidScale = {
-    "1": 0.05,
-    "2": 0.1,
-    "3": 4,
-  };
-
   let drawStar = (location, star) => {
     m.save();
       m.translate(location[0], location[1], location[2]);
@@ -951,7 +938,9 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
-  let drawAsteroid = (i, pos) => {
+  let drawAsteroid = (pos) => {
+    let asteroidCenterPosAdjustment = [-15, -90, -10];
+    let asteroidScale = 0.05;
     m.save();
       let x = pos[0] + 40 * noise.noise(3 * pos[0], 4 * pos[1], 5 * pos[2]);
       let y = pos[1] + 40 * noise.noise(3 * pos[0], 4 * pos[1], 8 * pos[2]);
@@ -960,22 +949,21 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.rotateX(noise.noise(pos[0], pos[1], pos[2]) * state.time);
       m.rotateY(noise.noise(pos[0], pos[1], pos[2]) * state.time);
       m.rotateZ(noise.noise(pos[0], pos[1], pos[2]) * state.time);
-      let s = (0.75 + Math.abs(Math.cos(noise.noise(3 * pos[0], 4 * pos[1], 5 * pos[2]))) / 2) * asteroidScale[i];
+      let s = (0.75 + Math.abs(Math.cos(noise.noise(3 * pos[0], 4 * pos[1], 5 * pos[2]))) / 2) * asteroidScale;
       m.scale(s, s, s);
-      m.translate(asteroidCenterPosAdjustment[i]);
-      let modelName = "asteroid" + i;
-      drawShape(CG[modelName], [1, 1, 1], state.mats.asteroid);
+      m.translate(asteroidCenterPosAdjustment);
+      drawShape(CG.asteroid, [1, 1, 1], state.mats.asteroid);
     m.restore();
   };
 
   let drawAsteroidBelt = () => {
     let interval = 27.1;
-    let r = 3;
+    let r = 2;
     let drawByCenter = (xCenter, yCenter, zCenter) => {
       for (let x = xCenter - r * interval; x <= xCenter + r * interval; x += interval) {
         for (let y = yCenter - r * interval; y <= yCenter + r * interval; y += interval) {
           for (let z = zCenter - 2 * r * interval; z <= zCenter + interval; z += interval) {
-            drawAsteroid(1, [x, y, z]);
+            drawAsteroid([x, y, z]);
           }
         }
       }
