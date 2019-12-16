@@ -1153,11 +1153,12 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
+  let shiploc = ship.loc.state;
   let drawSpaceship = (miniatureScale) => {
     m.save();
     let shipScale = 0.005;
     if (miniatureScale) shipScale *= miniatureScale;
-    m.translate(ship.loc[0], ship.loc[1], ship.loc[2]);
+    m.translate(shiploc[0], shiploc[1], shiploc[2]);
     m.multiply(CG.matrixTranspose(ship.rot));
     m.rotateX(-Math.PI / 2);
     m.rotateZ(Math.PI / 2);
@@ -1178,7 +1179,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
-  let shiploc = ship.loc.state;
   // miniature of solar system
   let drawAsteroidMiniatureMap = () => {
     m.save();
@@ -1221,9 +1221,9 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         }
       }
     };
-    let xCenter = Math.floor(ship.loc[0] / interval) * interval - interval / 4;
-    let yCenter = Math.floor(ship.loc[1] / interval) * interval - interval / 4;
-    let zCenter = Math.floor(ship.loc[2] / interval) * interval - interval / 4;
+    let xCenter = Math.floor(shiploc[0] / interval) * interval - interval / 4;
+    let yCenter = Math.floor(shiploc[1] / interval) * interval - interval / 4;
+    let zCenter = Math.floor(shiploc[2] / interval) * interval - interval / 4;
     drawByCenter(xCenter, yCenter, zCenter);
   };
 
