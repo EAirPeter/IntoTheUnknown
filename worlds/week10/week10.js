@@ -917,7 +917,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
      m.save();
         m.translate(0,0,.025);
         m.scale(.035,.035,.035);
-        drawShape(CG.sphere, [0,0,0]);
+        drawShape(CG.sphere, [0.5,0.5,1]);
      m.restore();
 
 
@@ -947,15 +947,14 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
      let B = W;
 
      let length  = Math.sqrt(Math.pow(A[0]- B[0],2) + Math.pow(A[1] - B[1],2) + Math.pow(A[2] - B[2],2));
-
      let M = CG.ik(0.5*length,0.5*length, B, [0,0,1]);
-
+     /*
      m.save();
 
-
-     m.identity();
+     
+     //m.identity();
      // joints
-     /*
+    
      m.save();
         m.translate(A[0],A[1],A[2]).scale(.03);
         drawShape(CG.sphere, [1,1,1]);
@@ -964,10 +963,10 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         m.translate(M[0],M[1],M[2]).scale(.03);
         drawShape(CG.sphere, [-0.5,0.5,1]);
      m.restore();
-     */
+     
 
-     let skinColor = [1,0,1], D;
-
+     //let skinColor = [1,0,1], D;
+     
      m.save();
         D = CG.mix(A,B,0.5);
         m.translate(D[0],D[1],D[2]);
@@ -984,9 +983,10 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
      //m.restore();
 
      m.restore();
+     */
 
   m.restore();
- }
+  }
 
   let drawSyncController = (pos, rot, color) => {
     let P = pos;
@@ -995,26 +995,39 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.translate(P[0], P[1], P[2]);
       m.rotateQ(rot);
       m.translate(0,.02,-.005);
-      m.rotateX(.75);
-      m.save();
-          m.translate(0,0,-.0095).scale(.004,.004,.003);
-      m.restore();
-      m.save();
-          m.translate(0,0,-.01).scale(.04,.04,.13);
-          drawShape(CG.torus1, [0,0,0]);
-      m.restore();
-      m.save();
-          m.translate(0,-.0135,-.008).scale(.04,.0235,.0015);
-          drawShape(CG.cylinder, [0,0,0]);
-      m.restore();
-      m.save();
-          m.translate(0,-.01,.03).scale(.012,.02,.037);
-          drawShape(CG.cylinder, [0,0,0]);
-      m.restore();
-      m.save();
-          m.translate(0,-.01,.067).scale(.012,.02,.023);
-          drawShape(CG.sphere, [0,0,0]);
-      m.restore();
+      
+      let s = 0.125;
+
+         m.save();
+            m.translate(-s,0,.001);
+            m.scale(.01,.01,.046);
+            drawShape(CG.sphere,[1,1,0]);
+         m.restore();
+      
+         m.save();
+            m.translate(s,0,.001);
+            m.scale(.01,.01,.046);
+            drawShape(CG.sphere, [1,1,0]);
+         m.restore();
+
+         m.save();
+            m.translate(-0,s,.001);
+            m.scale(.01,.01,.046);
+            drawShape(CG.sphere, [1,1,0]);
+         m.restore();
+
+          m.save();
+            m.translate(0,-s,.001);
+            m.scale(.01,.01,.046);
+            drawShape(CG.sphere, [1,1,0]);
+         m.restore();
+
+         m.save();
+            m.translate(0,0,.025);
+            m.scale(.035,.035,.035);
+            drawShape(CG.sphere, [0.5,0.5,1]);
+         m.restore();
+
     m.restore();
   };
 
