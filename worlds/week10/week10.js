@@ -18,6 +18,7 @@ const RING_RADIUS    = 0.0425;
 const TABLE_DEPTH    = inchesToMeters( 30);
 
 ////////////////////////////// SCENE SPECIFIC CODE
+MR.objs = [];
 
 class Obj {
   constructor(state) {
@@ -56,7 +57,7 @@ let stick = {
   min: .04,
   max: .2,
   active: null,
-  pos: [-.2, 1.3, -.2],
+  pos: [-.2, 1.26, -.3],
   Q: new Obj([0, 0, 0, 1]),
 };
 
@@ -67,7 +68,7 @@ let lever = {
   min: .04,
   max: .2,
   active: null,
-  pos: [.2, 1.3, -.2],
+  pos: [.2, 1.26, -.3],
   theta: new Obj(0),
 };
 
@@ -269,6 +270,7 @@ async function setup(state) {
   };
   await loadJsonModel("asteroid");
   await loadJsonModel("spaceship");
+  await loadJsonModel("spaceship_interior");
   // const asteroid2 = await axios.get("objs/asteroid2.json");
   // CG.asteroid2 = new CG.Model(asteroid2.data);
   // const asteroid3 = await axios.get("objs/asteroid3.json");
@@ -1186,7 +1188,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   let drawSolarMiniatureMap = () => {
     m.save();
       let miniatureScale = 0.00004;
-      m.translate(-0.5, EYE_HEIGHT * 0.8, -0.3);
+      m.translate(-0.6, EYE_HEIGHT * 0.8, -0.3);
       m.scale(miniatureScale, miniatureScale, miniatureScale);
       drawSolarSystem();
       drawSpaceship(120);
@@ -1197,7 +1199,8 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   let drawAsteroidMiniatureMap = () => {
     m.save();
       let miniatureScale = 0.004;
-      m.translate(0.7, EYE_HEIGHT * 0.8, -0.3);
+      // m.translate(1, EYE_HEIGHT * 1.0, -0.3);
+      m.translate(1.5, EYE_HEIGHT * 1.01, 2);
       m.scale(miniatureScale, miniatureScale, miniatureScale);
       m.translate(-shipLoc[0], -shipLoc[1], -shipLoc[2]);
       drawAsteroidBelt();
@@ -1215,7 +1218,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.translate(x, y, z);
       m.rotateX(noise.noise(pos[0], pos[1], pos[2]) * state.time);
       m.rotateY(noise.noise(pos[0], pos[1], pos[2]) * state.time);
-      m.rotateZ(noise.noise(pos[0], pos[1], pos[2]) * state.time);
+      // m.rotateZ(noise.noise(pos[0], pos[1], pos[2]) * state.time);
       let s = (0.75 + Math.abs(Math.cos(noise.noise(3 * pos[0], 4 * pos[1], 5 * pos[2]))) / 2) * asteroidScale;
       m.scale(s, s, s);
       m.translate(asteroidCenterPosAdjustment);
@@ -1224,7 +1227,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   };
 
   let drawAsteroidBelt = () => {
-    let interval = 25.1;
+    let interval = 27.1;
     let r = 3;
     let drawByCenter = (xCenter, yCenter, zCenter) => {
       for (let x = xCenter - r * interval; x <= xCenter + r * interval; x += interval) {
@@ -1244,10 +1247,10 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   let drawShip = () => {
     // cockpit
     m.save();
-      m.translate(-2, 0, 2);
-      m.rotateX(-Math.PI / 2);
-      m.scale(4, 4, 4);
-      drawShape(CG.plane, [0, 1, 1]);
+      let interiorScale = 0.03;
+      m.translate(0, 2.5, 3);
+      m.scale(interiorScale, interiorScale, interiorScale);
+      drawShape(CG.spaceship_interior, [.4, .5, .2]);
     m.restore();
     // pilot stick
     m.save();
