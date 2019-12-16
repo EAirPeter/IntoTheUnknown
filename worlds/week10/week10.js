@@ -93,7 +93,7 @@ let bullet_orientation = [0, 0, -1];
 let shoot = false;
 let life = 0;
 let bullet_loc = [0, 0, 0];
-
+let start_pos = [0, 0, 0];
 
 let texs = {
   white:        {img: "white.png"},
@@ -576,7 +576,8 @@ function onStartFrame(t, state) {
     Cs.push(input.RC);
   // pilot stick
   (function() {
-    if (stick.active != null && !stick.active.isGrasping())
+    if (out_side !== 0) return;
+    if (stick.active != null && !stick.active.isGrasping()){}
       stick.active = null;
     for (let i = 0; i < Cs.length; ++i) {
       let C = Cs[i];
@@ -615,6 +616,7 @@ function onStartFrame(t, state) {
   })();
   // thrust lever
   (function() {
+    if (out_side !== 0) return;
     if (lever.active != null && !lever.active.isGrasping())
       lever.active = null;
     for (let i = 0; i < Cs.length; ++i) {
@@ -1403,18 +1405,20 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
     if (RC) {
       if (RC.press() && !shoot) {
-        bullet_orientation = RC.orientation();
+        bullet_orientation = LC.orientation();
         shoot = true;
         life = 0;
+        start_pos =LC.position();
+        console.log(bullet_loc);
         bullet_loc = [0, 0, 0];
       }
       if(!shoot) {
-        m.save();
-        let l = RC.tip().slice();
-        m.translate(l[0], l[1], l[2]);
-        m.scale(0.1, 0.1, 0.1);
-        drawShape(CG.sphere, [1,1,1]);
-        m.restore();
+        // m.save();
+        // let l = RC.tip().slice();
+        // m.translate(l[0], l[1], l[2]);
+        // m.scale(0.1, 0.1, 0.1);
+        // drawShape(CG.sphere, [1,1,1]);
+        // m.restore();
       }
     }
 
@@ -1426,9 +1430,18 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         bullet_loc = [0, 0, 0];
         bullet_orientation = [0, 0, -1];
       }
-      bullet_loc = CG.add(bullet_loc, CG.scale([0, 0, -1], speed*state.dt));
       // bullet_loc = CG.add(bullet_loc, CG.scale(bullet_orientation, speed*state.dt));
+      // bullet_loc = CG.add(bullet_loc, CG.scale(bullet_orientation, speed*state.dt));
+      bullet_loc = CG.add(bullet_loc, CG.scale([0,0,-1], speed*state.dt));
+
+      if(life < 0.1) {
+        console.log(bullet_loc);
+      }
+
+      if(life < 0.1 ) console.log(bullet_orientation);
       m.save();
+      m.translate(start_pos[0], start_pos[1], start_pos[2]);
+      m.rotateQ(bullet_orientation);
       m.translate(bullet_loc[0], bullet_loc[1], bullet_loc[2]);
       m.scale(0.1, 0.1, 0.1);
       drawShape(CG.sphere, [1,1,1]);
