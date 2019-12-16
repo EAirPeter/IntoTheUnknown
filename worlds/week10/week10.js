@@ -43,6 +43,7 @@ let texs = {
   neptune:      {img: "8neptune.jpg"},
   milky_way:    {img: "milky_way.jpg"},
   asteroid:     {dir: "asteroid"},
+  spaceship:    {dir: "spaceship"},
 };
 
 let getMats = () => { return {
@@ -61,6 +62,7 @@ let getMats = () => { return {
   neptune:    [texs.neptune.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   milky_way:  [texs.milky_way.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   asteroid:   texs.asteroid.id,
+  spaceship:  texs.spaceship.id,
 }};
 
 let noise = new ImprovedNoise();
@@ -205,6 +207,7 @@ async function setup(state) {
     CG[modelName] = new CG.Model(model.data);
   };
   await loadJsonModel("asteroid");
+  await loadJsonModel("spaceship");
   // const asteroid2 = await axios.get("objs/asteroid2.json");
   // CG.asteroid2 = new CG.Model(asteroid2.data);
   // const asteroid3 = await axios.get("objs/asteroid3.json");
@@ -370,7 +373,7 @@ function sendSpawnMessage(object){
 
 // spaceship
 let ship = {
-  maxSpeed: 10,
+  maxSpeed: 10, // low speed: 10, high speed: 300
   maxRot: .02,
   loc: [0, 0, 0],
   rot: CG.matrixIdentity(),
@@ -382,7 +385,7 @@ let stick = {
   lim: Math.PI * .25,
   min: .04,
   max: .2,
-  pos: [0, 1.4, -.4],
+  pos: [-.2, 1.3, -.2],
   active: null,
   Q: [0, 0, 0, 1],
 };
@@ -393,7 +396,7 @@ let lever = {
   wid: .06,
   min: .04,
   max: .2,
-  pos: [.2, 1.2, -.2],
+  pos: [.2, 1.3, -.2],
   active: null,
   theta: 0,
 };
@@ -1152,13 +1155,40 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
+  let drawSpaceship = (miniatureScale) => {
+    m.save();
+    let shipScale = 0.005;
+    if (miniatureScale) shipScale *= miniatureScale;
+    m.translate(ship.loc[0], ship.loc[1], ship.loc[2]);
+    m.multiply(CG.matrixTranspose(ship.rot));
+    m.rotateX(-Math.PI / 2);
+    m.rotateZ(Math.PI / 2);
+    m.scale(shipScale, shipScale, shipScale);
+    m.translate(-600, 600, 300);
+    drawShape(CG.spaceship, [1, 1, 1], state.mats.spaceship);
+    m.restore();
+  };
+
   // miniature of solar system
-  let miniature = () => {
+  let drawSolarMiniatureMap = () => {
     m.save();
       let miniatureScale = 0.00004;
-      m.translate(0, EYE_HEIGHT * 0.8, -0.3);
+      m.translate(-0.5, EYE_HEIGHT * 0.8, -0.4);
       m.scale(miniatureScale, miniatureScale, miniatureScale);
       drawSolarSystem();
+      drawSpaceship(100);
+    m.restore();
+  };
+
+  // miniature of solar system
+  let drawAsteroidMiniatureMap = () => {
+    m.save();
+      let miniatureScale = 0.004;
+      m.translate(0.6, EYE_HEIGHT * 0.8, -0.4);
+      m.scale(miniatureScale, miniatureScale, miniatureScale);
+      m.translate(-ship.loc[0], -ship.loc[1], -ship.loc[2]);
+      drawAsteroidBelt();
+      drawSpaceship();
     m.restore();
   };
 
@@ -1228,7 +1258,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.translate(lever.pos[0], lever.pos[1], lever.pos[2]);
       m.save();
         m.translate(0, -.01, 0);
-        m.scale(lever.wid + .02, .01, .05);;
+        m.scale(lever.wid + .02, .01, .05);
         drawShape(CG.cube, [1,1,1]);
       m.restore();
       m.save();
@@ -1261,7 +1291,8 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       drawAsteroidBelt();
     m.restore();
     drawShip();
-    miniature();
+    drawSolarMiniatureMap();
+    drawAsteroidMiniatureMap();
   } else {
     m.save();
       arm_loc = CG.add(ship.loc, arm_loc);
