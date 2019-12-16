@@ -1364,7 +1364,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     drawAsteroidMiniatureMap();
   }
   else {
-    let shape = [0, 2, -2];
+    let shape = [0, 4, -2];
     drawLaser(2);
     let speed = 10;
     m.save();
@@ -1414,11 +1414,9 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     //   }
     // }
 
-
-
     m.save();
     m.translate(-shape[0], -shape[1], -shape[2]);
-    drawShip();
+    drawSpaceship();
     m.restore();
   }
 
