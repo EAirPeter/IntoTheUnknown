@@ -91,7 +91,7 @@ function HeadsetHandler(headset) {
 
 function ControllerHandler(controller) {
   this.isDown      = () => controller.buttons[1].pressed;
-  this.isGrasping  = () => controller.buttons[2].pressed;
+  this.isGrasping  = () => controller.buttons[1].pressed;
   this.onEndFrame  = () => { wasDown = this.isDown(); wasGrasping = this.isGrasping(); }
   this.orientation = () => controller.pose.orientation;
   this.position    = () => controller.pose.position;
