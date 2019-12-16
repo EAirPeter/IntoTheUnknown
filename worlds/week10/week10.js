@@ -19,11 +19,82 @@ const TABLE_DEPTH    = inchesToMeters( 30);
 
 ////////////////////////////// SCENE SPECIFIC CODE
 
+MR.objs = [];
+
+const INTERP_DELAY = 200;
+const EXTRAP_MAX = 40;
+
+class Interp {
+  constructor(mix) {
+    this.mix = mix;
+    this.queue = [];
+    this.time = -1;
+    this.told = 0;
+    this.lstamp = 0;
+    this.lstate = null;
+  }
+
+  push(stamp, state) {
+    this.queue.push({trecv: performance.now(), stamp: stamp, state: state});
+    this.lstamp = stamp;
+    this.lstate = state;
+  }
+
+  interp(dt, state) {
+    if (this.queue.length)
+      this.told = this.queue[0].trecv;
+    if (performance.now() - this.told < INTERP_DELAY) {
+      this.time = -1;
+      return state;
+    }
+    if (this.queue.length > 0) {
+      let prev = null;
+      if (this.time < 0) {
+        prev = this.queue[0];
+        this.time = prev.stamp - INTERP_DELAY;
+      }
+      else
+        this.time += dt;
+      let stamp = this.time;
+      if (stamp > this.lstamp) {
+        this.time = -1;
+        this.queue = [];
+        return this.mix(state, this.lstate, stamp / this.lstamp);
+      }
+      if (prev != null && stamp < prev.stamp)
+        return this.mix(state, prev.state, stamp / prev.stamp);
+      let next = this.queue[0];
+      while (stamp > next.stamp && this.queue.length > 0) {
+        this.queue.shift();
+        prev = next;
+        next = this.queue[0];
+      }
+      if (prev == null)
+        return this.mix(state, next.state, stamp / next.stamp);
+      let dstamp = next.stamp - prev.stamp;
+      let dtime = stamp - prev.stamp;
+      if (dstamp < .0001) {
+        this.time = -1;
+        return this.mix(state, next.state, stamp / next.stamp);
+      }
+      return this.mix(prev.state, next.state, dtime / dstamp);
+    }
+    if (this.lstamp > 0 && this.time - this.lstamp < EXTRAP_MAX) {
+      this.time += dt;
+      return this.mix(state, this.lstate, this.time / this.lstamp);
+    }
+    this.time = -1;
+    return state;
+  }
+}
+
 class Obj {
-  constructor(state) {
+  constructor(state, interp) {
     this.uid = MR.objs.length;
     this.lock = new Lock(this.uid);
     this.state = state;
+    this.interp = interp;
+    this.id = -1;
     MR.objs.push(this);
   }
 
@@ -32,23 +103,45 @@ class Obj {
       type: "spawn",
       uid: this.uid,
       lockid: -1,
-      state: this.state,
+      state: {stamp: performance.now(), state: this.state},
     };
     MR.syncClient.send(response);
   }
 
-  synchronize() {
+  byserver(id, stamp, state) {
+    this.id = id;
+    if (MR.playerid == this.id)
+      return;
+    if (this.interp)
+      this.interp.push(stamp, state);
+    else
+      this.state = state;
+  }
+
+  tick(stamp) {
+    if (MR.playerid == this.id)
+      return;
+    if (this.interp) {
+      let dt = this.lstamp ? stamp - this.lstamp : 0;
+      this.lstamp = stamp;
+      this.state = this.interp.interp(dt, this.state);
+    }
+  }
+
+  update(state) {
+    this.state = state;
     const response = {
       type: "object",
       uid: this.uid,
       lockid: MR.playerid,
-      state: this.state,
+      state: {stamp: performance.now(), state: state},
     };
     MR.syncClient.send(response);
   }
 }
 
 MR.srvid = new Obj(-1);
+
 
 // pilot stick
 let stick = {
@@ -76,7 +169,7 @@ let ship = {
   maxSpeed: 10, // low speed: 10, high speed: 300
   maxRot: .8,
   //speed: 0,
-  loc: new Obj([0, 0, 0]),
+  loc: new Obj([0, 0, 0], new Interp(CG.mix)),
   rot: new Obj(CG.matrixIdentity()),
 };
 
@@ -392,29 +485,19 @@ async function setup(state) {
     MR.objs[i].spawn();
 }
 
-function sendSpawnMessage(object){
-  const response =
-    {
-      type: "spawn",
-      uid: object.uid,
-      lockid: -1,
-      state: {
-        position: object.position,
-        orientation: object.orientation,
-      }
-    };
-
-  MR.syncClient.send(response);
-}
-
 function onStartFrame(t, state) {
+  for (let i = 0; i < MR.objs.length; ++i)
+    MR.objs[i].tick(t);
   (function() {
     if (MR.srvid.state in MR.avatars)
       return;
     if (!MR.srvid.lock.lock())
       return;
-    MR.srvid.state = MR.playerid;
-    MR.srvid.synchronize();
+    if (MR.srvid.state in MR.avatars) {
+      MR.srvid.lock.unlock();
+      return;
+    }
+    MR.srvid.update(MR.playerid);
     MR.srvid.lock.unlock();
   })();
 
@@ -574,19 +657,16 @@ function onStartFrame(t, state) {
         D = [Math.sin(t) * c, s, Math.cos(t) * c];
         p = (Math.PI * .5 - p) / (Math.PI * .5 - stick.lim);
         let rot = CG.matrixMultiply(CG.matrixRotateZ(+ship.maxRot * Math.sin(t) * p * dt), ship.rot.state);
-        ship.rot.state = CG.matrixMultiply(CG.matrixRotateX(-ship.maxRot * Math.cos(t) * p * dt), rot);
-        ship.rot.synchronize();
+        ship.rot.update(CG.matrixMultiply(CG.matrixRotateX(-ship.maxRot * Math.cos(t) * p * dt), rot));
         let A = CG.cross([0, 1, 0], D);
         t = Math.acos(CG.dot([0, 1, 0], D));
         c = Math.cos(t * .5);
         s = Math.sin(t * .5);
-        stick.Q.state = [A[0] * s, A[1] * s, A[2] * s, c];
-        stick.Q.synchronize();
+        stick.Q.update([A[0] * s, A[1] * s, A[2] * s, c]);
       }
     }
     if (stick.active == null && stick.Q.lock.locked()) {
-      stick.Q.state = [0, 0, 0, 1];
-      stick.Q.synchronize();
+      stick.Q.update([0, 0, 0, 1]);
       stick.Q.lock.unlock();
     }
   })();
@@ -606,8 +686,7 @@ function onStartFrame(t, state) {
       if (lever.active == C) {
         if (!lever.theta.lock.lock())
           continue;
-        lever.theta.state = CG.clamp(t, -lever.lim, lever.lim);
-        lever.theta.synchronize();
+        lever.theta.update(CG.clamp(t, -lever.lim, lever.lim));
       }
     }
     if (lever.active == null && lever.theta.lock.locked())
@@ -616,8 +695,7 @@ function onStartFrame(t, state) {
 
   if (MR.srvid.state == MR.playerid) {
     let speed = ship.maxSpeed * lever.theta.state / lever.lim;
-    ship.loc.state = CG.add(ship.loc.state, CG.matrixTransform(CG.matrixTranspose(ship.rot.state), [0, 0, -speed * dt, 0]));
-    ship.loc.synchronize();
+    ship.loc.update(CG.add(ship.loc.state, CG.matrixTransform(CG.matrixTranspose(ship.rot.state), [0, 0, -speed * dt, 0])));
   }
 
   // /*-----------------------------------------------------------------
