@@ -72,6 +72,10 @@ let lever = {
   theta: new Obj(0),
 };
 
+let switchButton = {
+  pos: [-0.7, 1.3, -0.3]
+};
+
 // spaceship
 let ship = {
   maxSpeed: 10, // low speed: 10, high speed: 300
@@ -455,11 +459,6 @@ function onStartFrame(t, state) {
     MR.avatarMatrixInverse = state.avatarMatrixInverse = CG.matrixIdentity();
   }
 
-  if(input.LC) {
-    if (input.LC.press2()) {
-      out_side = 1 - out_side;
-    }
-  }
 
 
   if (MR.VRIsActive()) {
@@ -642,6 +641,27 @@ function onStartFrame(t, state) {
     let speed = ship.maxSpeed * lever.theta.state / lever.lim;
     ship.loc.state = CG.add(ship.loc.state, CG.matrixTransform(CG.matrixTranspose(ship.rot.state), [0, 0, -speed * dt, 0]));
     ship.loc.synchronize();
+  }
+
+  let isInsideSquare = (lp, switchButtonSize) => {
+    let D = CG.add(CG.subtract(lp, switchButton.pos), [0, EYE_HEIGHT, 0]);
+    let dx = Math.abs(D[0]);
+    let dy = Math.abs(D[1]);
+    let dz = Math.abs(D[2]);
+    return (dx < switchButtonSize) && (dy < switchButtonSize) && (dz < switchButtonSize);
+  };
+
+  if(input.LC) {
+    if (out_side === 1) {
+      if (input.LC.press2()) {
+        out_side = 0;
+      }
+    } else {
+      let switchButtonSize = 0.06;
+      if (input.LC.press() && isInsideSquare(input.LC.position(), switchButtonSize)) {
+        out_side = 1;
+      }
+    }
   }
 
   // /*-----------------------------------------------------------------
@@ -1212,7 +1232,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   let drawSolarMiniatureMap = () => {
     m.save();
       let miniatureScale = 0.00004;
-      m.translate(-0.6, EYE_HEIGHT * 0.8, -0.3);
+      m.translate(-1.1, EYE_HEIGHT * 0.8, 2.1);
       m.scale(miniatureScale, miniatureScale, miniatureScale);
       drawSolarSystem();
       drawSpaceship(120);
@@ -1275,6 +1295,13 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.translate(0, 2.5, 3);
       m.scale(interiorScale, interiorScale, interiorScale);
       drawShape(CG.spaceship_interior, [.4, .5, .2]);
+    m.restore();
+    // switch button
+    m.save();
+      // m.translate(-0.6, 1.3, -0.3);
+      m.translate(switchButton.pos);
+      m.scale(.05, .05, .05);
+      drawShape(CG.cube, [1,0.5,0.5]);
     m.restore();
     // pilot stick
     m.save();
