@@ -660,7 +660,7 @@ function onStartFrame(t, state) {
   // pilot stick
   (function() {
     if (out_side !== 0) return;
-    if (stick.active != null && !stick.active.isGrasping()){}
+    if (stick.active != null && !stick.active.isGrasping())
       stick.active = null;
     for (let i = 0; i < Cs.length; ++i) {
       let C = Cs[i];
