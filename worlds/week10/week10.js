@@ -942,7 +942,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
         m.translate(D[0],D[1],D[2]);
         m.aimZ(CG.subtract(A,B));
         m.scale(.01,.01,0.5*length); //0.14 
-        drawShape(lathe, skinColor, -1,1, 2,1);
+        drawShape(CG.cylinder, skinColor);
      m.restore();
 
      //m.save();
