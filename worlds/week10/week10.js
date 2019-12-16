@@ -170,7 +170,7 @@ let ship = {
   maxRot: .8,
   //speed: 0,
   loc: new Obj([0, 0, 0], new Interp(CG.mix)),
-  rot: new Obj(CG.matrixIdentity()),
+  ori: new Obj([0, 0, 0, 1], new Interp(CG.qMix)),
 };
 
 let last_time = 0;
@@ -656,8 +656,8 @@ function onStartFrame(t, state) {
         let s = Math.sin(p);
         D = [Math.sin(t) * c, s, Math.cos(t) * c];
         p = (Math.PI * .5 - p) / (Math.PI * .5 - stick.lim);
-        let rot = CG.matrixMultiply(CG.matrixRotateZ(+ship.maxRot * Math.sin(t) * p * dt), ship.rot.state);
-        ship.rot.update(CG.matrixMultiply(CG.matrixRotateX(-ship.maxRot * Math.cos(t) * p * dt), rot));
+        let ori = CG.qMul(CG.qRotZ(+ship.maxRot * Math.sin(t) * p * dt), ship.ori.state);
+        ship.ori.update(CG.qMul(CG.qRotX(-ship.maxRot * Math.cos(t) * p * dt), ori));
         let A = CG.cross([0, 1, 0], D);
         t = Math.acos(CG.dot([0, 1, 0], D));
         c = Math.cos(t * .5);
@@ -693,9 +693,11 @@ function onStartFrame(t, state) {
       lever.theta.lock.unlock();
   })();
 
+  ship.rot = CG.matrixFromQuaternion(ship.ori.state);
+
   if (MR.srvid.state == MR.playerid) {
     let speed = ship.maxSpeed * lever.theta.state / lever.lim;
-    ship.loc.update(CG.add(ship.loc.state, CG.matrixTransform(CG.matrixTranspose(ship.rot.state), [0, 0, -speed * dt, 0])));
+    ship.loc.update(CG.add(ship.loc.state, CG.matrixTransform(CG.matrixTranspose(ship.rot), [0, 0, -speed * dt, 0])));
   }
 
   // /*-----------------------------------------------------------------
@@ -1232,7 +1234,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   };
 
   let shipLoc = ship.loc.state;
-  let shipRot = ship.rot.state;
+  let shipRot = ship.rot;
   let drawSpaceship = (miniatureScale) => {
     m.save();
     let shipScale = 0.005;
@@ -1363,7 +1365,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
 
   if (out_side === 0) {
     m.save();
-      m.multiply(ship.rot.state);
+      m.multiply(shipRot);
       m.translate(-shipLoc[0], -shipLoc[1], -shipLoc[2]);
       drawMilkyWay();
       drawSolarSystem();
