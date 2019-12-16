@@ -97,11 +97,16 @@ function HeadsetHandler(headset) {
 
 function ControllerHandler(controller) {
   this.isDown      = () => controller.buttons[1].pressed;
+  this.isDown2     = () => controller.buttons[2].pressed;
+
   this.isGrasping  = () => controller.buttons[1].pressed;
-  this.onEndFrame  = () => { wasDown = this.isDown(); wasGrasping = this.isGrasping(); }
+  this.onEndFrame  = () => { wasDown = this.isDown(); wasDown2 = this.isDown2(); wasGrasping = this.isGrasping(); }
   this.orientation = () => controller.pose.orientation;
   this.position    = () => controller.pose.position;
+
   this.press       = () => !wasDown && this.isDown();
+  this.press2      = () => !wasDown2 && this.isDown2();
+
   this.release     = () => wasDown && !this.isDown();
   this.grasp       = () => !wasGrasping && this.isGrasping();
   this.tip         = () => {
@@ -123,6 +128,7 @@ function ControllerHandler(controller) {
     return [v[12],v[13],v[14]];
   };
   let wasDown = false;
+  let wasDown2 = false;
   let wasGrasping = false;
 }
 
@@ -433,6 +439,12 @@ function onStartFrame(t, state) {
   if(input.HS != null) {
     this.BGM.updateListener(input.HS.position(), input.HS.orientation());
     this.BGM.playFileAt('assets/audio/Coward(cut)(64k).mp3', input.HS.position());
+  }
+
+  if(input.LC) {
+    if (input.LC.press2()) {
+      out_side = 1 - out_side;
+    }
   }
 
 
@@ -1296,7 +1308,6 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   }
 
 
-
   if (out_side === 0) {
     m.save();
       m.multiply(ship.rot);
@@ -1315,6 +1326,9 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.save();
     m.multiply(ship.rot);
     m.translate(-ship.loc[0]-shape[0], -ship.loc[1]-shape[1], -ship.loc[2]-shape[2]);
+    drawMilkyWay();
+    drawSolarSystem();
+    drawAsteroidBelt();
     m.restore();
     if (RC) {
       if (RC.press() && !shoot) {
@@ -1356,10 +1370,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     //   }
     // }
 
-    drawMilkyWay();
-    drawSolarSystem();
-    drawAsteroidBelt();
-    m.restore();
+    
 
     m.save();
     m.translate(-shape[0], -shape[1], -shape[2]);
