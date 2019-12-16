@@ -370,8 +370,8 @@ function sendSpawnMessage(object){
 
 // spaceship
 let ship = {
-  maxSpeed: 800,
-  maxRot: .04,
+  maxSpeed: 10,
+  maxRot: .02,
   loc: [0, 0, 0],
   rot: CG.matrixIdentity(),
   speed: 0,
@@ -958,24 +958,20 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
   };
 
   let drawAsteroidBelt = () => {
-    let interval = 27.1;
-    let r = 2;
+    let interval = 25.1;
+    let r = 3;
     let drawByCenter = (xCenter, yCenter, zCenter) => {
       for (let x = xCenter - r * interval; x <= xCenter + r * interval; x += interval) {
         for (let y = yCenter - r * interval; y <= yCenter + r * interval; y += interval) {
-          for (let z = zCenter - 2 * r * interval; z <= zCenter + interval; z += interval) {
+          for (let z = zCenter - r * interval; z <= zCenter + r * interval; z += interval) {
             drawAsteroid([x, y, z]);
           }
         }
       }
     };
-    let xCenter = Math.floor(ship.loc[0] / interval) * interval - interval / 3;
-    let yCenter = Math.floor(ship.loc[1] / interval) * interval - interval / 3;
-    let zCenter = Math.floor(ship.loc[2] / interval) * interval - interval / 3;
-    drawByCenter(xCenter, yCenter, zCenter);
-    xCenter = xCenter + 2 * interval / 3;
-    yCenter = yCenter + 2 * interval / 3;
-    zCenter = zCenter + 2 * interval / 3;
+    let xCenter = Math.floor(ship.loc[0] / interval) * interval - interval / 4;
+    let yCenter = Math.floor(ship.loc[1] / interval) * interval - interval / 4;
+    let zCenter = Math.floor(ship.loc[2] / interval) * interval - interval / 4;
     drawByCenter(xCenter, yCenter, zCenter);
   };
 
