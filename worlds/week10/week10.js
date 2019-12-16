@@ -335,6 +335,9 @@ async function setup(state) {
   'assets/audio/peacock.wav'
   ]);
 
+  this.BGM = new SpatialAudioContext([
+    'assets/audio/Coward(cut)(64k).mp3'
+  ])
 
   /************************************************************************
 
@@ -426,6 +429,12 @@ function onStartFrame(t, state) {
     MR.avatarMatrixForward = state.avatarMatrixForward = CG.matrixIdentity();
     MR.avatarMatrixInverse = state.avatarMatrixInverse = CG.matrixIdentity();
   }
+
+  if(input.HS != null) {
+    this.BGM.updateListener(input.HS.position(), input.HS.orientation());
+    this.BGM.playFileAt('assets/audio/Coward(cut)(64k).mp3', input.HS.position());
+  }
+
 
   if (MR.VRIsActive()) {
     if (!input.HS) input.HS = new HeadsetHandler(MR.headset);
@@ -1258,6 +1267,35 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
   };
 
+  let drawLaser = (length) => {
+
+    let W = [0,0,0];
+    let H = [0,0,0];
+    if(input.LC) { 
+      if (input.LC.isDown()){
+
+        W = input.LC.position();
+
+        m.save();
+        
+            m.translate(0, EYE_HEIGHT, 0);
+            let LaserColor = [1,0,0],D;
+            let hand = input.LC.position();
+
+            m.save();
+              D = input.LC.orientation();
+              m.translate(hand[0], hand[1], hand[2]);
+              m.rotateQ(D);
+              m.translate(0,0.02,-length);
+              m.scale(0.005,0.005,length); 
+              drawShape(CG.cylinder, LaserColor);
+            m.restore();
+        m.restore();
+      }
+    }
+  }
+
+
 
   if (out_side === 0) {
     m.save();
@@ -1269,10 +1307,10 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     m.restore();
     drawShip();
     miniature();
-  } else {
+  } 
+  else {
     let shape = [0, 2, -2];
-    
-
+    drawLaser(2);
     let speed = 10;
     m.save();
     m.multiply(ship.rot);
@@ -1404,17 +1442,23 @@ function onEndFrame(t, state) {
     this.audioContext1.updateListener(input.HS.position(), input.HS.orientation());
     this.audioContext2.updateListener(input.HS.position(), input.HS.orientation());
 
+
+
     // Here you initiate the 360 spatial audio playback from a given position,
     // in this case controller position, this can be anything,
     // i.e. a speaker, or an drum in the room.
     // You must provide the path given, when you construct the audio context.
 
-    // if (input.LC && input.LC.press())
-    //   this.audioContext1.playFileAt('assets/audio/blop.wav', input.LC.position());
+    if (input.LC && input.LC.press())
+      this.audioContext1.playFileAt('assets/audio/blop.wav', input.LC.position());
 
     // if (input.RC && input.RC.press())
     //   this.audioContext2.playFileAt('assets/audio/peacock.wav', input.RC.position());
+    // this.BGM.playFileAt('assets/audio/Coward(cut)(64k).mp3', input.HS.orientation());
+
+    
   }
+
 
   if (input.LC) input.LC.onEndFrame();
   if (input.RC) input.RC.onEndFrame();
