@@ -18,6 +18,7 @@ const RING_RADIUS    = 0.0425;
 const TABLE_DEPTH    = inchesToMeters( 30);
 
 ////////////////////////////// SCENE SPECIFIC CODE
+MR.objs = [];
 
 class Obj {
   constructor(state) {
