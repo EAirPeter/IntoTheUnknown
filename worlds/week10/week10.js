@@ -998,7 +998,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       m.rotateQ(rot);
       m.translate(0,.02,-.005);
       
-      let s = 0.125;
+      let s = .0225;
 
          m.save();
             m.translate(-s,0,.001);
