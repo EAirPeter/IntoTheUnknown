@@ -28,6 +28,13 @@ let shoot = false;
 let life = 0;
 let bullet_loc = [0, 0, 0];
 
+/*-------------------------add laser variables------------------------*/ 
+let laser_speed = 0.5;
+let laser_len = 0;
+let hold_time = 0;
+/*-------------------------add laser variables------------------------*/ 
+
+
 
 let texs = {
   white:        {img: "white.png"},
@@ -1320,8 +1327,11 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     miniature();
   } 
   else {
+
     let shape = [0, 2, -2];
-    drawLaser(2);
+    
+    //drawLaser(2);
+    
     let speed = 10;
     m.save();
     m.multiply(ship.rot);
@@ -1330,13 +1340,63 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
     drawSolarSystem();
     drawAsteroidBelt();
     m.restore();
-    if (RC) {
-      if (RC.press() && !shoot) {
+
+    /*--------------------------laser--------------------------*/
+    if (input.RC.isDown()){
+
+      hold_time = hold_time + state.dt;
+      laser_len = laser_speed * hold_time;
+
+    /*---------------------------------draw laser--------------------------*/
+      m.save();
+
+         m.translate(0, EYE_HEIGHT, 0);
+         let LaserColor = [1,0,0],D;
+         let hand = input.RC.position();
+
+         m.save();
+            D = input.RC.orientation();
+            m.translate(hand[0], hand[1], hand[2]);
+            m.rotateQ(D);
+            m.translate(0,0.02,-laser_len);
+            m.scale(0.005,0.005,laser_len); //size of laser
+            drawShape(CG.cylinder, LaserColor);
+         m.restore();
+
+      m.restore();
+      /*-------------------------------------------------------------------*/
+   }
+
+  else{
+        // make it disappear 
+        hold_time = 0;
+    m.save();
+
+         m.translate(0, EYE_HEIGHT, 0);
+         let LaserColor = [1,0,0],D;
+         let hand = input.RC.position();
+
+         m.save();
+            D = input.RC.orientation();
+            m.translate(hand[0], hand[1], hand[2]);
+            m.rotateQ(D);
+            m.translate(0,0.02,-0);
+            m.scale(0.005,0.005,0); 
+            drawShape(CG.cylinder, LaserColor);
+         m.restore();
+
+   m.restore();
+}
+    
+
+    if (LC && RC) {
+      if (LC.press() && !shoot) {
         bullet_orientation = RC.orientation();
         shoot = true;
         life = 0;
         bullet_loc = [0, 0, 0];
       }
+
       if(!shoot) {
         m.save();
         let l = RC.tip().slice();
