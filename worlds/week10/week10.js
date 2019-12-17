@@ -217,6 +217,7 @@ let texs = {
   milky_way:    {img: "milky_way.jpg"},
   asteroid:     {dir: "asteroid"},
   spaceship:    {dir: "spaceship"},
+  ship_interior:{img: "ship_interior.jpg"},
 };
 
 let getMats = () => { return {
@@ -234,6 +235,7 @@ let getMats = () => { return {
   uranus:     [texs.uranus.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   neptune:    [texs.neptune.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   milky_way:  [texs.milky_way.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
+  ship_interior:[texs.ship_interior.id[0], texs.white.id[0], texs.normal.id[0], texs.white.id[0]],
   asteroid:   texs.asteroid.id,
   spaceship:  texs.spaceship.id,
 }};
@@ -1395,7 +1397,7 @@ function myDraw(t, projMat, viewMat, state, eyeIdx, isMiniature) {
       let interiorScale = 0.03;
       m.translate(0, 2.5, 3);
       m.scale(interiorScale, interiorScale, interiorScale);
-      drawShape(CG.spaceship_interior, [.4, .5, .2]);
+      drawShape(CG.spaceship_interior, [1, 1, 1], state.mats.ship_interior);
     m.restore();
     // switch button
     m.save();
